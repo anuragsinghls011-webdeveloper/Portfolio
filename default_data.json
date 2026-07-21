@@ -1,0 +1,337 @@
+{
+    "hero": {
+        "firstName": "Anurag",
+        "lastName": "Singh",
+        "badge": "Available for freelance work",
+        "initials": "AS",
+        "description": "I craft modern, scalable, and performant web applications using the MERN stack. Passionate about clean code, intuitive UI/UX, and building products that make a difference.",
+        "typewriterTexts": [
+            "MERN Full Stack Developer",
+            "React.js Enthusiast",
+            "Node.js Backend Architect",
+            "MongoDB Database Expert",
+            "UI/UX Developer",
+            "Open Source Contributor"
+        ],
+        "statProjects": 5,
+        "statExperience": 1,
+        "statClients": 2
+    },
+    "about": {
+        "title": "Turning Ideas Into Digital Reality",
+        "bio1": "I'm a dedicated MERN Full Stack Developer with a passion for creating elegant, efficient, and user-centric web applications. With a strong foundation in both frontend and backend technologies, I bridge the gap between design and functionality.",
+        "bio2": "My approach combines clean code principles with modern design patterns, ensuring every project is scalable, maintainable, and delivers an exceptional user experience.",
+        "highlights": [
+            {
+                "icon": "🎯",
+                "text": "Problem Solver"
+            },
+            {
+                "icon": "🚀",
+                "text": "Fast Learner"
+            },
+            {
+                "icon": "🤝",
+                "text": "Team Player"
+            },
+            {
+                "icon": "💡",
+                "text": "Creative Thinker"
+            }
+        ],
+        "codeWindow": {
+            "name": "Anurag Singh",
+            "role": "MERN Full Stack Developer",
+            "location": "India 🇮🇳",
+            "education": "B.Tech in Computer Science",
+            "languages": [
+                "JavaScript",
+                "TypeScript",
+                "Python"
+            ],
+            "passion": "Building scalable web apps",
+            "hobbies": [
+                "Open Source",
+                "Tech Blogs",
+                "Gaming"
+            ]
+        }
+    },
+    "skills": [
+        {
+            "id": "skill_1",
+            "category": "Frontend",
+            "desc": "Building beautiful interfaces",
+            "icon": "🎨",
+            "color": "#61dafb",
+            "bg": "rgba(97,218,251,0.1)",
+            "tags": [
+                "React.js",
+                "Next.js",
+                "TypeScript",
+                "JavaScript (ES6+)",
+                "Redux",
+                "HTML5",
+                "CSS3 / SASS",
+                "Tailwind CSS",
+                "Material UI",
+                "Framer Motion"
+            ]
+        },
+        {
+            "id": "skill_2",
+            "category": "Backend",
+            "desc": "Powering server-side logic",
+            "icon": "⚙️",
+            "color": "#68a838",
+            "bg": "rgba(104,159,56,0.1)",
+            "tags": [
+                "Node.js",
+                "Express.js",
+                "REST APIs",
+                "GraphQL",
+                "Socket.io",
+                "JWT Auth",
+                "OAuth 2.0",
+                "Middleware"
+            ]
+        },
+        {
+            "id": "skill_3",
+            "category": "Database",
+            "desc": "Managing data efficiently",
+            "icon": "🗄️",
+            "color": "#4db050",
+            "bg": "rgba(77,175,80,0.1)",
+            "tags": [
+                "MongoDB",
+                "Mongoose",
+                "PostgreSQL",
+                "MySQL",
+                "Redis",
+                "Firebase",
+                "Prisma"
+            ]
+        },
+        {
+            "id": "skill_4",
+            "category": "DevOps & Tools",
+            "desc": "Streamlining development",
+            "icon": "🛠️",
+            "color": "#ff6b9d",
+            "bg": "rgba(255,107,157,0.1)",
+            "tags": [
+                "Git / GitHub",
+                "Docker",
+                "AWS",
+                "Vercel",
+                "Netlify",
+                "CI/CD",
+                "Jest",
+                "Postman",
+                "Figma",
+                "VS Code"
+            ]
+        }
+    ],
+    "experience": [
+        {
+            "id": "exp_1",
+            "date": "Jan 2024 — Present",
+            "role": "Senior Full Stack Developer",
+            "company": "TechVista Solutions",
+            "desc": "Leading a team of 5 developers building enterprise SaaS products. Architected microservices backend serving 50K+ daily users. Reduced API response time by 40% through optimization and caching strategies.",
+            "tech": [
+                "React",
+                "Node.js",
+                "MongoDB",
+                "Redis",
+                "Docker"
+            ]
+        },
+        {
+            "id": "exp_2",
+            "date": "Jun 2022 — Dec 2023",
+            "role": "Full Stack Developer",
+            "company": "InnovateTech Labs",
+            "desc": "Built and maintained 10+ client-facing web applications. Implemented real-time features using Socket.io. Integrated third-party APIs including Stripe, Twilio, and SendGrid for payment and communication solutions.",
+            "tech": [
+                "Next.js",
+                "Express",
+                "PostgreSQL",
+                "Socket.io",
+                "AWS"
+            ]
+        },
+        {
+            "id": "exp_3",
+            "date": "Jan 2021 — May 2022",
+            "role": "Junior Web Developer",
+            "company": "CodeCraft Agency",
+            "desc": "Developed responsive websites and web applications for diverse clients. Collaborated with designers to translate Figma mockups into pixel-perfect code. Gained expertise in RESTful API design and database management.",
+            "tech": [
+                "React",
+                "Node.js",
+                "MongoDB",
+                "CSS3"
+            ]
+        },
+        {
+            "id": "exp_4",
+            "date": "Jun 2020 — Dec 2020",
+            "role": "Frontend Developer Intern",
+            "company": "PixelPerfect Studios",
+            "desc": "Started my professional journey building UI components with React. Learned agile methodologies and version control best practices. Contributed to improving site performance and accessibility scores.",
+            "tech": [
+                "React",
+                "JavaScript",
+                "SASS",
+                "Git"
+            ]
+        }
+    ],
+    "projects": [
+        {
+            "id": "proj_1",
+            "category": "fullstack",
+            "type": "Full Stack Application",
+            "name": "ShopFlow — E-Commerce Platform",
+            "desc": "A full-featured e-commerce platform with product management, cart system, Stripe payments, order tracking, and an admin dashboard with analytics.",
+            "tech": [
+                "React",
+                "Node.js",
+                "MongoDB",
+                "Stripe",
+                "Redux"
+            ],
+            "demoLink": "#",
+            "codeLink": "#",
+            "svg": "<svg width=\"80\" height=\"80\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"rgba(108,99,255,0.5)\" stroke-width=\"1\"><path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"/><polyline points=\"3.27 6.96 12 12.01 20.73 6.96\"/><line x1=\"12\" y1=\"22.08\" x2=\"12\" y2=\"12\"/></svg>",
+            "bgGradient": "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)"
+        },
+        {
+            "id": "proj_2",
+            "category": "fullstack",
+            "type": "Full Stack Application",
+            "name": "ConnectHub — Social Network",
+            "desc": "A real-time social networking app with posts, likes, comments, direct messaging via Socket.io, and friend recommendations powered by ML.",
+            "tech": [
+                "Next.js",
+                "Express",
+                "MongoDB",
+                "Socket.io",
+                "Cloudinary"
+            ],
+            "demoLink": "#",
+            "codeLink": "#",
+            "svg": "<svg width=\"80\" height=\"80\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"rgba(0,212,170,0.5)\" stroke-width=\"1\"><path d=\"M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M23 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/></svg>",
+            "bgGradient": "linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%)"
+        },
+        {
+            "id": "proj_3",
+            "category": "fullstack",
+            "type": "Full Stack Application",
+            "name": "TaskForge — Project Manager",
+            "desc": "A Kanban-style project management tool with drag-and-drop boards, team collaboration, deadline tracking, and automated notifications.",
+            "tech": [
+                "React",
+                "Node.js",
+                "PostgreSQL",
+                "Prisma",
+                "DnD Kit"
+            ],
+            "demoLink": "#",
+            "codeLink": "#",
+            "svg": "<svg width=\"80\" height=\"80\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"rgba(255,107,157,0.5)\" stroke-width=\"1\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\" ry=\"2\"/><line x1=\"8\" y1=\"21\" x2=\"16\" y2=\"21\"/><line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"21\"/></svg>",
+            "bgGradient": "linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 50%, #16213e 100%)"
+        },
+        {
+            "id": "proj_4",
+            "category": "frontend",
+            "type": "Frontend Application",
+            "name": "CineVerse — Movie Explorer",
+            "desc": "A sleek movie discovery app with TMDB API integration, advanced search, watchlists, ratings, and a responsive cinema-themed UI.",
+            "tech": [
+                "React",
+                "TMDB API",
+                "Redux Toolkit",
+                "Framer Motion"
+            ],
+            "demoLink": "#",
+            "codeLink": "#",
+            "svg": "<svg width=\"80\" height=\"80\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"rgba(245,158,11,0.5)\" stroke-width=\"1\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polygon points=\"10 8 16 12 10 16 10 8\"/></svg>",
+            "bgGradient": "linear-gradient(135deg, #0a192f 0%, #112240 50%, #1d3a5c 100%)"
+        },
+        {
+            "id": "proj_5",
+            "category": "backend",
+            "type": "Backend API",
+            "name": "AuthShield — Auth Microservice",
+            "desc": "A production-ready authentication microservice with JWT, OAuth 2.0, refresh tokens, rate limiting, and role-based access control.",
+            "tech": [
+                "Node.js",
+                "Express",
+                "MongoDB",
+                "JWT",
+                "Redis"
+            ],
+            "demoLink": "#",
+            "codeLink": "#",
+            "svg": "<svg width=\"80\" height=\"80\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"rgba(108,99,255,0.5)\" stroke-width=\"1\"><polyline points=\"16 18 22 12 16 6\"/><polyline points=\"8 6 2 12 8 18\"/></svg>",
+            "bgGradient": "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #3a3a3a 100%)"
+        },
+        {
+            "id": "proj_6",
+            "category": "fullstack",
+            "type": "Full Stack Application",
+            "name": "DevBlog — CMS Platform",
+            "desc": "A developer blogging platform with Markdown editor, code highlighting, tags, search, comment system, and SEO optimization built-in.",
+            "tech": [
+                "Next.js",
+                "MongoDB",
+                "MDX",
+                "Tailwind",
+                "Vercel"
+            ],
+            "demoLink": "#",
+            "codeLink": "#",
+            "svg": "<svg width=\"80\" height=\"80\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"rgba(0,212,170,0.5)\" stroke-width=\"1\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"/><polyline points=\"14 2 14 8 20 8\"/><line x1=\"16\" y1=\"13\" x2=\"8\" y2=\"13\"/><line x1=\"16\" y1=\"17\" x2=\"8\" y2=\"17\"/><polyline points=\"10 9 9 9 8 9\"/></svg>",
+            "bgGradient": "linear-gradient(135deg, #0a1628 0%, #1a2744 50%, #0d2137 100%)"
+        }
+    ],
+    "services": [
+        {
+            "id": "svc_1",
+            "icon": "🌐",
+            "name": "Full Stack Web Development",
+            "desc": "Complete web applications built with the MERN stack, from database design to responsive frontend, ensuring seamless end-to-end functionality."
+        },
+        {
+            "id": "svc_2",
+            "icon": "🔌",
+            "name": "REST & GraphQL APIs",
+            "desc": "Scalable, well-documented APIs with authentication, validation, rate limiting, and comprehensive error handling for any use case."
+        },
+        {
+            "id": "svc_3",
+            "icon": "🎨",
+            "name": "UI/UX Development",
+            "desc": "Pixel-perfect, responsive interfaces with smooth animations, accessibility standards, and intuitive user experiences that convert."
+        },
+        {
+            "id": "svc_4",
+            "icon": "☁️",
+            "name": "Deployment & DevOps",
+            "desc": "Cloud deployment on AWS, Docker containerization, CI/CD pipelines, and performance monitoring for production-ready applications."
+        }
+    ],
+    "contact": {
+        "email": "anurag.singh@example.com",
+        "location": "India 🇮🇳",
+        "availability": "Open to opportunities",
+        "github": "#",
+        "linkedin": "#",
+        "twitter": "#",
+        "website": "#"
+    }
+}

@@ -1,0 +1,243 @@
+require('dotenv').config();
+const express = require('express');
+const path = require('path');
+const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+
+const app = express();
+app.use(express.json());
+
+// ===== MONGODB CONNECTION =====
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ Connected to MongoDB Atlas'))
+  .catch(err => console.error('❌ MongoDB Connection Error:', err.message));
+
+// ===== MONGOOSE MODELS =====
+const portfolioSchema = new mongoose.Schema({
+    hero: Object,
+    about: Object,
+    skills: Array,
+    experience: Array,
+    projects: Array,
+    services: Array,
+    contact: Object
+}, { strict: false });
+const Portfolio = mongoose.model('Portfolio', portfolioSchema);
+
+const messageSchema = new mongoose.Schema({
+    id: String,
+    name: String,
+    email: String,
+    subject: String,
+    message: String,
+    date: Date
+});
+const Message = mongoose.model('Message', messageSchema);
+
+// ===== SEED DATABASE =====
+async function seedDatabase() {
+    try {
+        const count = await Portfolio.countDocuments();
+        if (count === 0) {
+            console.log('Seeding initial portfolio data...');
+            const fs = require('fs');
+            const backupPath = path.join(__dirname, 'default_data.json');
+            if (fs.existsSync(backupPath)) {
+                const backupData = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
+                await Portfolio.create(backupData);
+                console.log('✅ Database seeded with default_data.json');
+            }
+        }
+        
+        // Also import messages.json into DB if it exists and DB is empty
+        const msgCount = await Message.countDocuments();
+        if (msgCount === 0) {
+            const fs = require('fs');
+            const messagesPath = path.join(__dirname, 'messages.json');
+            if (fs.existsSync(messagesPath)) {
+                const messagesData = JSON.parse(fs.readFileSync(messagesPath, 'utf8'));
+                if (messagesData.length > 0) {
+                    await Message.insertMany(messagesData);
+                    console.log('✅ Database seeded with previous messages.json');
+                }
+            }
+        }
+    } catch(e) {
+        console.error('Error during seeding:', e.message);
+    }
+}
+mongoose.connection.once('open', seedDatabase);
+
+// ===== AUTHENTICATION =====
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token == null) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+    jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret', (err, user) => {
+        if (err) return res.status(403).json({ success: false, error: 'Forbidden' });
+        req.user = user;
+        next();
+    });
+}
+
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    const expectedUser = (process.env.ADMIN_USERNAME || '').trim();
+    const expectedPass = (process.env.ADMIN_PASSWORD || '').trim();
+    if (username === expectedUser && password === expectedPass) {
+        const token = jwt.sign({ username }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '24h' });
+        res.json({ success: true, token });
+    } else {
+        res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+});
+
+app.post('/api/save', authenticateToken, async (req, res) => {
+    try {
+        const newData = req.body;
+        await Portfolio.findOneAndUpdate({}, newData, { upsert: true });
+        res.json({ success: true });
+    } catch(err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/reset', authenticateToken, async (req, res) => {
+    try {
+        const fs = require('fs');
+        const backupPath = path.join(__dirname, 'default_data.json');
+        if (fs.existsSync(backupPath)) {
+            const backupData = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
+            await Portfolio.findOneAndUpdate({}, backupData, { upsert: true });
+            res.json({ success: true, data: backupData });
+        } else {
+            res.json({ success: false, message: 'No backup found' });
+        }
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ===== MESSAGES API =====
+app.post('/api/contact', async (req, res) => {
+    try {
+        const { name, email, subject, message } = req.body;
+        if (!name || !email || !message) {
+            return res.status(400).json({ success: false, error: 'Name, email, and message are required.' });
+        }
+        
+        await Message.create({
+            id: 'msg_' + Date.now(),
+            name,
+            email,
+            subject: subject || 'No Subject',
+            message,
+            date: new Date()
+        });
+        
+        res.json({ success: true });
+    } catch(err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get('/api/messages', authenticateToken, async (req, res) => {
+    try {
+        const messages = await Message.find().sort({ date: -1 });
+        res.json({ success: true, data: messages });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.delete('/api/messages/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        await Message.deleteOne({ id });
+        res.json({ success: true });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ===== DYNAMIC DATA.JS INJECTION =====
+app.get('/data.js', async (req, res) => {
+    try {
+        let portfolioData = await Portfolio.findOne();
+        
+        if (!portfolioData) {
+            const fs = require('fs');
+            const backupPath = path.join(__dirname, 'default_data.json');
+            if (fs.existsSync(backupPath)) {
+                portfolioData = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
+            } else {
+                portfolioData = {};
+            }
+        }
+        
+        let cleanData = portfolioData._doc ? { ...portfolioData._doc } : portfolioData;
+        delete cleanData._id;
+        delete cleanData.__v;
+
+        const dataJsContent = `// data.js - Dynamically generated by Server from MongoDB
+const defaultData = ${JSON.stringify(cleanData, null, 4)};
+
+function getPortfolioData() {
+    return defaultData;
+}
+
+function savePortfolioData(data) {
+    const token = localStorage.getItem('cms_token');
+    fetch('/api/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    }).then(res => {
+        if (res.status === 401 || res.status === 403) {
+            localStorage.removeItem('cms_token');
+            location.reload();
+        }
+        return res.json();
+    }).then(res => {
+        if (!res.success) console.error('Failed to save data dynamically.');
+    }).catch(err => console.error(err));
+}
+
+function resetPortfolioData() {
+    const token = localStorage.getItem('cms_token');
+    fetch('/api/reset', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token }
+    }).then(res => {
+        if (res.status === 401 || res.status === 403) {
+            localStorage.removeItem('cms_token');
+        }
+        location.reload();
+    });
+}`;
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.type('application/javascript');
+        res.send(dataJsContent);
+    } catch(err) {
+        console.error('Error generating data.js:', err);
+        res.status(500).send('console.error("Failed to load data");');
+    }
+});
+
+// IMPORTANT: Define this AFTER /data.js so express intercepts the request!
+app.use(express.static(__dirname));
+
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log('----------------------------------------------------');
+    console.log('CMS Server is running with MongoDB Integrations!');
+    console.log('Admin Dashboard: http://localhost:' + PORT + '/admin.html');
+    console.log('Live Portfolio:  http://localhost:' + PORT + '/portfolio.html');
+    console.log('----------------------------------------------------');
+});

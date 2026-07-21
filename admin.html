@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio CMS — Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --bg-card: rgba(255, 255, 255, 0.025);
+            --bg-card-hover: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.07);
+            --border-hover: rgba(255, 255, 255, 0.14);
+            --text-primary: #f0f0f5;
+            --text-secondary: #a0a0b8;
+            --text-muted: #6b6b80;
+            --accent: #6c63ff;
+            --accent-hover: #5a52d5;
+            --green: #00d4aa;
+            --green-bg: rgba(0, 212, 170, 0.08);
+            --pink: #ff6b9d;
+            --pink-bg: rgba(255, 107, 157, 0.08);
+            --warn: #f59e0b;
+            --warn-bg: rgba(245, 158, 11, 0.08);
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.08);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --radius-full: 9999px;
+            --font-primary: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --transition: 0.25s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        ::selection {
+            background: rgba(108, 99, 255, 0.3);
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 260px;
+            min-width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .sidebar-brand {
+            padding: 28px 24px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-brand h1 {
+            font-family: var(--font-primary);
+            font-size: 1.3rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-brand h1 .logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, #6c63ff, #00d4aa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .sidebar-brand p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            margin-left: 46px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 0;
+            overflow-y: auto;
+        }
+
+        .nav-section-label {
+            padding: 12px 24px 6px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            margin: 2px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: rgba(108, 99, 255, 0.06);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: rgba(108, 99, 255, 0.1);
+            color: var(--accent);
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 20px;
+            border-radius: 4px;
+            background: var(--accent);
+        }
+
+        .nav-item-icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav-item-badge {
+            margin-left: auto;
+            background: rgba(108, 99, 255, 0.15);
+            color: var(--accent);
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+        }
+
+        .sidebar-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .sidebar-footer a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--green);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.88rem;
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+
+        .sidebar-footer a:hover {
+            background: var(--green-bg);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Bar */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
+            min-height: 72px;
+        }
+
+        .topbar-title {
+            font-family: var(--font-primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px 40px 60px;
+        }
+
+        /* ===== STATS ROW ===== */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-family: var(--font-primary);
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .stat-value.purple {
+            color: var(--accent);
+        }
+
+        .stat-value.green {
+            color: var(--green);
+        }
+
+        .stat-value.pink {
+            color: var(--pink);
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            border: none;
+            transition: var(--transition);
+            font-family: var(--font-body);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(108, 99, 255, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 8px 12px;
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .btn-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.82rem;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-icon:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        /* ===== TAB CONTENT ===== */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ===== ITEM LIST ===== */
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .item-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: var(--transition);
+        }
+
+        .item-card:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-card-hover);
+        }
+
+        .item-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            background: rgba(108, 99, 255, 0.08);
+            flex-shrink: 0;
+        }
+
+        .item-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-title {
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-subtitle {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-tags {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .item-tag {
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            font-weight: 500;
+            background: rgba(108, 99, 255, 0.08);
+            color: var(--accent);
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        /* ===== FORMS ===== */
+        .form-panel {
+            display: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        .form-panel.active {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+        }
+
+        .form-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-header h3 {
+            font-family: var(--font-primary);
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 0.92rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b6b80' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+            cursor: pointer;
+        }
+
+        .form-select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ===== TOAST NOTIFICATION ===== */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            padding: 14px 24px;
+            border-radius: var(--radius);
+            background: var(--bg-secondary);
+            border: 1px solid var(--green);
+            color: var(--green);
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(.4, 0, .2, 1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .topbar {
+                padding: 16px 20px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== LOGIN OVERLAY ===== */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .login-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .login-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 40px;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            text-align: center;
+        }
+
+        .login-card h2 {
+            margin-bottom: 24px;
+            font-size: 1.5rem;
+        }
+
+        .login-card .form-group {
+            text-align: left;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card">
+            <h2>Admin Login</h2>
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" id="loginUser" class="form-input" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="loginPass" class="form-input" placeholder="Enter password"
+                    onkeydown="if(event.key === 'Enter') handleLogin()">
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;"
+                onclick="handleLogin()">Login</button>
+            <div id="loginError" style="color: var(--danger); margin-top: 15px; display: none;">Invalid credentials
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h1><span class="logo-icon">⚡</span> CMS</h1>
+            <p>Component Manager</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">General</div>
+            <div class="nav-item" data-target="hero-tab">
+                <span class="nav-item-icon">🦸‍♂️</span>
+                Hero Section
+            </div>
+            <div class="nav-item" data-target="about-tab">
+                <span class="nav-item-icon">🧑‍💻</span>
+                About Me
+            </div>
+            <div class="nav-item" data-target="contact-tab">
+                <span class="nav-item-icon">📬</span>
+                Contact Info
+            </div>
+
+            <div class="nav-section-label">Content</div>
+            <div class="nav-item" data-target="services-tab">
+                <span class="nav-item-icon">⚙️</span>
+                Services
+                <span class="nav-item-badge" id="svc-count">0</span>
+            </div>
+            <div class="nav-item active" data-target="skills-tab">
+                <span class="nav-item-icon">🛠️</span>
+                Skills
+                <span class="nav-item-badge" id="skills-count">0</span>
+            </div>
+            <div class="nav-item" data-target="experience-tab">
+                <span class="nav-item-icon">💼</span>
+                Experience
+                <span class="nav-item-badge" id="exp-count">0</span>
+            </div>
+            <div class="nav-item" data-target="projects-tab">
+                <span class="nav-item-icon">🚀</span>
+                Projects
+                <span class="nav-item-badge" id="proj-count">0</span>
+            </div>
+            <div class="nav-section-label">Actions</div>
+            <div class="nav-item" data-target="messages-tab">
+                <span class="nav-item-icon">📨</span>
+                Messages
+                <span class="nav-item-badge" id="msg-count">0</span>
+            </div>
+            <div class="nav-section-label">Actions</div>
+            <div class="nav-item" onclick="resetData()">
+                <span class="nav-item-icon">🔄</span>
+                Reset to Defaults
+            </div>
+            <div class="nav-item" onclick="handleLogout()">
+                <span class="nav-item-icon" style="color: var(--danger)">🚪</span>
+                Logout
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="portfolio.html" target="_blank">
+                <span>🌐</span> View Live Portfolio
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main">
+        <header class="topbar">
+            <h2 class="topbar-title" id="topbarTitle">Manage Skills</h2>
+            <div class="topbar-actions" id="topbarActions">
+                <button class="btn btn-primary" id="addBtn" onclick="handleAdd()">+ Add New</button>
+            </div>
+        </header>
+
+        <div class="content">
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-label">Skill Categories</div>
+                    <div class="stat-value purple" id="stat-skills">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Work Experiences</div>
+                    <div class="stat-value green" id="stat-exp">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Projects</div>
+                    <div class="stat-value pink" id="stat-proj">0</div>
+                </div>
+            </div>
+
+            <!-- ===== HERO TAB ===== -->
+            <div id="hero-tab" class="tab-content">
+                <div class="form-panel" style="display: block;">
+                    <div class="form-card">
+                        <div class="form-header">
+                            <h3>Edit Hero Section</h3>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">First Name</label>
+                                <input type="text" id="hero-firstname" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" id="hero-lastname" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Badge Text</label>
+                                <input type="text" id="hero-badge" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Avatar Initials</label>
+                                <input type="text" id="hero-initials" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea id="hero-desc" class="form-textarea" style="min-height: 80px;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Typewriter Texts (comma separated)</label>
+                            <textarea id="hero-typewriter" class="form-textarea" style="min-height: 80px;"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Stat: Projects</label>
+                                <input type="number" id="hero-stat-projects" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Stat: Experience Years</label>
+                                <input type="number" id="hero-stat-exp" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Stat: Clients</label>
+                                <input type="number" id="hero-stat-clients" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveHero()">💾 Save Hero</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== ABOUT TAB ===== -->
+            <div id="about-tab" class="tab-content">
+                <div class="form-panel" style="display: block;">
+                    <div class="form-card">
+                        <div class="form-header">
+                            <h3>Edit About Section</h3>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Title</label>
+                            <input type="text" id="about-title" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bio Paragraph 1</label>
+                            <textarea id="about-bio1" class="form-textarea" style="min-height: 80px;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bio Paragraph 2</label>
+                            <textarea id="about-bio2" class="form-textarea" style="min-height: 80px;"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveAbout()">💾 Save About</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== CONTACT TAB ===== -->
+            <div id="contact-tab" class="tab-content">
+                <div class="form-panel" style="display: block;">
+                    <div class="form-card">
+                        <div class="form-header">
+                            <h3>Edit Contact Section</h3>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" id="contact-email" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Location</label>
+                                <input type="text" id="contact-location" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Availability</label>
+                            <input type="text" id="contact-availability" class="form-input">
+                        </div>
+                        <h4 style="color:var(--text-primary); margin:10px 0;">Social Links</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">GitHub URL</label>
+                                <input type="text" id="contact-github" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">LinkedIn URL</label>
+                                <input type="text" id="contact-linkedin" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Twitter URL</label>
+                                <input type="text" id="contact-twitter" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Website URL</label>
+                                <input type="text" id="contact-website" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveContact()">💾 Save Contact</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SERVICES TAB ===== -->
+            <div id="services-tab" class="tab-content">
+                <div id="services-list-view">
+                    <div class="item-list" id="services-list"></div>
+                </div>
+                <div id="services-form-view" class="form-panel">
+                    <div class="form-card">
+                        <div class="form-header">
+                            <h3 id="services-form-title">Add Service</h3>
+                            <button class="btn-icon" onclick="hideForm('services')" title="Close">✕</button>
+                        </div>
+                        <input type="hidden" id="service-id">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Service Name *</label>
+                                <input type="text" id="service-name" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Icon (Emoji) *</label>
+                                <input type="text" id="service-icon" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description *</label>
+                            <textarea id="service-desc" class="form-textarea" style="min-height: 80px;"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveService()">💾 Save Service</button>
+                            <button class="btn btn-outline" onclick="hideForm('services')">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SKILLS TAB ===== -->
+            <div id="skills-tab" class="tab-content active">
+                <div id="skills-list-view">
+                    <div class="item-list" id="skills-list"></div>
+                </div>
+                <div id="skills-form-view" class="form-panel">
+                    <div class="form-card">
+                        <div class="form-header">
+                            <h3 id="skills-form-title">Add Skill Category</h3>
+                            <button class="btn-icon" onclick="hideForm('skills')" title="Close">✕</button>
+                        </div>
+                        <input type="hidden" id="skill-id">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Category Name *</label>
+                                <input type="text" id="skill-category" class="form-input" placeholder="e.g. Frontend">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Icon (Emoji)</label>
+                                <input type="text" id="skill-icon" class="form-input" placeholder="e.g. 🎨">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <input type="text" id="skill-desc" class="form-input"
+                                placeholder="e.g. Building beautiful interfaces">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tags (comma separated) *</label>
+                            <textarea id="skill-tags" class="form-textarea"
+                                placeholder="React.js, Next.js, TypeScript, Redux..."
+                                style="min-height: 80px;"></textarea>
+                            <p class="form-hint">Enter each skill separated by a comma. These appear as tags on the
+                                portfolio.</p>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveSkill()">💾 Save Skill</button>
+                            <button class="btn btn-outline" onclick="hideForm('skills')">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== EXPERIENCE TAB ===== -->
+            <div id="experience-tab" class="tab-content">
+                <div id="exp-list-view">
+                    <div class="item-list" id="exp-list"></div>
+                </div>
+                <div id="exp-form-view" class="form-panel">
+                    <div class="form-card">
+                        <div class="form-header">
+                            <h3 id="exp-form-title">Add Experience</h3>
+                            <button class="btn-icon" onclick="hideForm('exp')" title="Close">✕</button>
+                        </div>
+                        <input type="hidden" id="exp-id">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Role / Position *</label>
+                                <input type="text" id="exp-role" class="form-input"
+                                    placeholder="e.g. Senior Full Stack Developer">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Company *</label>
+                                <input type="text" id="exp-company" class="form-input"
+                                    placeholder="e.g. TechVista Solutions">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Timeline</label>
+                            <input type="text" id="exp-date" class="form-input" placeholder="e.g. Jan 2024 — Present">
+                            <p class="form-hint">Use any date format you prefer. This appears as-is on the portfolio.
+                            </p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea id="exp-desc" class="form-textarea"
+                                placeholder="Describe your key responsibilities and achievements..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tech Stack (comma separated)</label>
+                            <input type="text" id="exp-tech" class="form-input"
+                                placeholder="React, Node.js, MongoDB, Docker">
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveExperience()">💾 Save Experience</button>
+                            <button class="btn btn-outline" onclick="hideForm('exp')">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== PROJECTS TAB ===== -->
+            <div id="projects-tab" class="tab-content">
+                <div id="proj-list-view">
+                    <div class="item-list" id="proj-list"></div>
+                </div>
+                <div id="proj-form-view" class="form-panel">
+                    <div class="form-card">
+                        <div class="form-header">
+                            <h3 id="proj-form-title">Add Project</h3>
+                            <button class="btn-icon" onclick="hideForm('proj')" title="Close">✕</button>
+                        </div>
+                        <input type="hidden" id="proj-id">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Project Name *</label>
+                                <input type="text" id="proj-name" class="form-input"
+                                    placeholder="e.g. ShopFlow — E-Commerce Platform">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Category</label>
+                                <select id="proj-category" class="form-select">
+                                    <option value="fullstack">Full Stack</option>
+                                    <option value="frontend">Frontend</option>
+                                    <option value="backend">Backend</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Type Label</label>
+                            <input type="text" id="proj-type" class="form-input"
+                                placeholder="e.g. Full Stack Application">
+                            <p class="form-hint">A short label shown above the project title (e.g. "Full Stack
+                                Application", "Backend API").</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description *</label>
+                            <textarea id="proj-desc" class="form-textarea"
+                                placeholder="Describe what this project does, its key features..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tech Stack (comma separated)</label>
+                            <input type="text" id="proj-tech" class="form-input"
+                                placeholder="React, Node.js, MongoDB, Stripe, Redux">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Live Demo URL</label>
+                                <input type="text" id="proj-demo" class="form-input" placeholder="https://...">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Source Code URL</label>
+                                <input type="text" id="proj-code" class="form-input"
+                                    placeholder="https://github.com/...">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Image URL (Optional)</label>
+                            <input type="text" id="proj-image" class="form-input"
+                                placeholder="https://... (Leave blank to use default icon)">
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveProject()">💾 Save Project</button>
+                            <button class="btn btn-outline" onclick="hideForm('proj')">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== MESSAGES TAB ===== -->
+            <div id="messages-tab" class="tab-content">
+                <div class="item-list" id="msg-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span id="toast-icon">✅</span>
+        <span id="toast-msg"></span>
+    </div>
+
+    <script src="data.js"></script>
+    <script>
+        let portfolioData = getPortfolioData();
+        let currentTab = 'skills';
+
+        const tabTitles = {
+            'hero-tab': 'Manage Hero Section',
+            'about-tab': 'Manage About Section',
+            'contact-tab': 'Manage Contact Section',
+            'services-tab': 'Manage Services',
+            'skills-tab': 'Manage Skills',
+            'experience-tab': 'Manage Experience',
+            'projects-tab': 'Manage Projects',
+            'messages-tab': 'Inbox Messages'
+        };
+
+        // ===== NAVIGATION =====
+        document.querySelectorAll('.nav-item[data-target]').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                item.classList.add('active');
+                const target = item.dataset.target;
+                document.getElementById(target).classList.add('active');
+                document.getElementById('topbarTitle').textContent = tabTitles[target] || 'Dashboard';
+
+                if (target === 'skills-tab') currentTab = 'skills';
+                else if (target === 'experience-tab') currentTab = 'exp';
+                else if (target === 'projects-tab') currentTab = 'proj';
+                else if (target === 'services-tab') currentTab = 'services';
+                else currentTab = target.replace('-tab', '');
+
+                hideForm('skills'); hideForm('exp'); hideForm('proj'); hideForm('services');
+            });
+        });
+
+        // ===== SHOW / HIDE FORMS =====
+        function handleAdd() {
+            clearForm(currentTab);
+            const formTitle = currentTab === 'skills' ? 'Add Skill Category' :
+                currentTab === 'exp' ? 'Add Experience' :
+                    currentTab === 'services' ? 'Add Service' : 'Add Project';
+            const titleEl = document.getElementById(`${currentTab === 'exp' ? 'exp' : currentTab}-form-title`);
+            if (titleEl) titleEl.textContent = formTitle;
+            showForm(currentTab);
+        }
+
+        function showForm(type) {
+            document.getElementById(`${type}-list-view`).style.display = 'none';
+            document.getElementById(`${type}-form-view`).classList.add('active');
+        }
+
+        function hideForm(type) {
+            document.getElementById(`${type}-list-view`).style.display = 'block';
+            document.getElementById(`${type}-form-view`).classList.remove('active');
+        }
+
+        function clearForm(type) {
+            const container = document.getElementById(`${type}-form-view`);
+            container.querySelectorAll('input:not([type=hidden]), textarea').forEach(el => el.value = '');
+            container.querySelector('input[type=hidden]').value = '';
+            if (type === 'proj') {
+                document.getElementById('proj-category').value = 'fullstack';
+            }
+        }
+
+        // ===== TOAST =====
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = message;
+            document.getElementById('toast-icon').textContent = isError ? '❌' : '✅';
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => toast.className = 'toast', 3000);
+        }
+
+        // ===== UPDATE STATS =====
+        function updateStats() {
+            portfolioData = getPortfolioData();
+            document.getElementById('stat-skills').textContent = portfolioData.skills.length;
+            document.getElementById('stat-exp').textContent = portfolioData.experience.length;
+            document.getElementById('stat-proj').textContent = portfolioData.projects.length;
+            document.getElementById('skills-count').textContent = portfolioData.skills.length;
+            document.getElementById('exp-count').textContent = portfolioData.experience.length;
+            document.getElementById('proj-count').textContent = portfolioData.projects.length;
+            const svcCount = document.getElementById('svc-count');
+            if (svcCount && portfolioData.services) svcCount.textContent = portfolioData.services.length;
+        }
+
+        // ===== RENDER LISTS =====
+        function renderAll() {
+            updateStats();
+            loadHeroForm();
+            loadAboutForm();
+            loadContactForm();
+            renderSkills();
+            renderExperience();
+            renderProjects();
+            renderServices();
+        }
+
+        function renderSkills() {
+            const container = document.getElementById('skills-list');
+            if (!portfolioData.skills.length) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🛠️</div><p>No skill categories yet.</p><button class="btn btn-primary" onclick="handleAdd()">+ Add your first skill</button></div>`;
+                return;
+            }
+            container.innerHTML = portfolioData.skills.map(skill => `
+                <div class="item-card">
+                    <div class="item-icon" style="background: ${skill.bg || 'rgba(108,99,255,0.08)'};">${skill.icon || '📦'}</div>
+                    <div class="item-body">
+                        <div class="item-title">${skill.category}</div>
+                        <div class="item-subtitle">${skill.desc || 'No description'}</div>
+                        <div class="item-tags">${skill.tags.slice(0, 5).map(t => `<span class="item-tag">${t}</span>`).join('')}${skill.tags.length > 5 ? `<span class="item-tag">+${skill.tags.length - 5} more</span>` : ''}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-outline btn-sm" onclick="editSkill('${skill.id}')">✏️ Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteItem('skills','${skill.id}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderExperience() {
+            const container = document.getElementById('exp-list');
+            if (!portfolioData.experience.length) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">💼</div><p>No experiences added yet.</p><button class="btn btn-primary" onclick="currentTab='exp'; handleAdd()">+ Add experience</button></div>`;
+                return;
+            }
+            container.innerHTML = portfolioData.experience.map(exp => `
+                <div class="item-card">
+                    <div class="item-icon" style="background: var(--green-bg);">💼</div>
+                    <div class="item-body">
+                        <div class="item-title">${exp.role}</div>
+                        <div class="item-subtitle">${exp.company} · ${exp.date}</div>
+                        <div class="item-tags">${exp.tech.map(t => `<span class="item-tag">${t}</span>`).join('')}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-outline btn-sm" onclick="editExperience('${exp.id}')">✏️ Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteItem('experience','${exp.id}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderProjects() {
+            const container = document.getElementById('proj-list');
+            if (!portfolioData.projects.length) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🚀</div><p>No projects added yet.</p><button class="btn btn-primary" onclick="currentTab='proj'; handleAdd()">+ Add project</button></div>`;
+                return;
+            }
+            container.innerHTML = portfolioData.projects.map(proj => `
+                <div class="item-card">
+                    <div class="item-icon" style="background: var(--pink-bg);">🚀</div>
+                    <div class="item-body">
+                        <div class="item-title">${proj.name}</div>
+                        <div class="item-subtitle">${proj.type || proj.category}</div>
+                        <div class="item-tags">${proj.tech.map(t => `<span class="item-tag">${t}</span>`).join('')}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-outline btn-sm" onclick="editProject('${proj.id}')">✏️ Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteItem('projects','${proj.id}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ===== HERO CRUD =====
+        function loadHeroForm() {
+            const h = portfolioData.hero || {};
+            document.getElementById('hero-firstname').value = h.firstName || '';
+            document.getElementById('hero-lastname').value = h.lastName || '';
+            document.getElementById('hero-badge').value = h.badge || '';
+            document.getElementById('hero-initials').value = h.initials || '';
+            document.getElementById('hero-desc').value = h.description || '';
+            document.getElementById('hero-typewriter').value = (h.typewriterTexts || []).join(', ');
+            document.getElementById('hero-stat-projects').value = h.statProjects || 0;
+            document.getElementById('hero-stat-exp').value = h.statExperience || 0;
+            document.getElementById('hero-stat-clients').value = h.statClients || 0;
+        }
+
+        function saveHero() {
+            portfolioData.hero = {
+                firstName: document.getElementById('hero-firstname').value.trim(),
+                lastName: document.getElementById('hero-lastname').value.trim(),
+                badge: document.getElementById('hero-badge').value.trim(),
+                initials: document.getElementById('hero-initials').value.trim(),
+                description: document.getElementById('hero-desc').value.trim(),
+                typewriterTexts: document.getElementById('hero-typewriter').value.split(',').map(t => t.trim()).filter(Boolean),
+                statProjects: parseInt(document.getElementById('hero-stat-projects').value) || 0,
+                statExperience: parseInt(document.getElementById('hero-stat-exp').value) || 0,
+                statClients: parseInt(document.getElementById('hero-stat-clients').value) || 0
+            };
+            savePortfolioData(portfolioData);
+            showToast('Hero section saved!');
+        }
+
+        // ===== ABOUT CRUD =====
+        function loadAboutForm() {
+            const a = portfolioData.about || {};
+            document.getElementById('about-title').value = a.title || '';
+            document.getElementById('about-bio1').value = a.bio1 || '';
+            document.getElementById('about-bio2').value = a.bio2 || '';
+        }
+
+        function saveAbout() {
+            if (!portfolioData.about) portfolioData.about = {};
+            portfolioData.about.title = document.getElementById('about-title').value.trim();
+            portfolioData.about.bio1 = document.getElementById('about-bio1').value.trim();
+            portfolioData.about.bio2 = document.getElementById('about-bio2').value.trim();
+            savePortfolioData(portfolioData);
+            showToast('About section saved!');
+        }
+
+        // ===== CONTACT CRUD =====
+        function loadContactForm() {
+            const c = portfolioData.contact || {};
+            document.getElementById('contact-email').value = c.email || '';
+            document.getElementById('contact-location').value = c.location || '';
+            document.getElementById('contact-availability').value = c.availability || '';
+            document.getElementById('contact-github').value = c.github || '';
+            document.getElementById('contact-linkedin').value = c.linkedin || '';
+            document.getElementById('contact-twitter').value = c.twitter || '';
+            document.getElementById('contact-website').value = c.website || '';
+        }
+
+        function saveContact() {
+            portfolioData.contact = {
+                email: document.getElementById('contact-email').value.trim(),
+                location: document.getElementById('contact-location').value.trim(),
+                availability: document.getElementById('contact-availability').value.trim(),
+                github: document.getElementById('contact-github').value.trim(),
+                linkedin: document.getElementById('contact-linkedin').value.trim(),
+                twitter: document.getElementById('contact-twitter').value.trim(),
+                website: document.getElementById('contact-website').value.trim()
+            };
+            savePortfolioData(portfolioData);
+            showToast('Contact info saved!');
+        }
+
+        // ===== SERVICES CRUD =====
+        function renderServices() {
+            const container = document.getElementById('services-list');
+            if (!portfolioData.services || !portfolioData.services.length) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚙️</div><p>No services added yet.</p><button class="btn btn-primary" onclick="currentTab='services'; handleAdd()">+ Add service</button></div>`;
+                return;
+            }
+            container.innerHTML = portfolioData.services.map(svc => `
+                <div class="item-card">
+                    <div class="item-icon" style="background: var(--bg-card);">${svc.icon || '⚙️'}</div>
+                    <div class="item-body">
+                        <div class="item-title">${svc.name}</div>
+                        <div class="item-subtitle">${svc.desc || 'No description'}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-outline btn-sm" onclick="editService('${svc.id}')">✏️ Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteItem('services','${svc.id}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editService(id) {
+            const svc = portfolioData.services.find(s => s.id === id);
+            if (!svc) return;
+            document.getElementById('service-id').value = svc.id;
+            document.getElementById('service-name').value = svc.name;
+            document.getElementById('service-icon').value = svc.icon || '';
+            document.getElementById('service-desc').value = svc.desc || '';
+            document.getElementById('services-form-title').textContent = 'Edit Service';
+            showForm('services');
+        }
+
+        function saveService() {
+            const name = document.getElementById('service-name').value.trim();
+            if (!name) return showToast('Service name is required!', true);
+
+            const id = document.getElementById('service-id').value || 'svc_' + Date.now();
+            const icon = document.getElementById('service-icon').value.trim() || '⚙️';
+            const desc = document.getElementById('service-desc').value.trim();
+
+            if (!portfolioData.services) portfolioData.services = [];
+            const existing = portfolioData.services.findIndex(s => s.id === id);
+            const svcObj = { id, name, icon, desc };
+
+            if (existing > -1) portfolioData.services[existing] = svcObj;
+            else portfolioData.services.push(svcObj);
+
+            savePortfolioData(portfolioData);
+            hideForm('services');
+            renderAll();
+            showToast(existing > -1 ? 'Service updated!' : 'Service added!');
+        }
+
+        // ===== DELETE =====
+        function deleteItem(collection, id) {
+            if (!confirm('Delete this item? This action cannot be undone.')) return;
+            portfolioData[collection] = portfolioData[collection].filter(item => item.id !== id);
+            savePortfolioData(portfolioData);
+            renderAll();
+            showToast('Item deleted successfully');
+        }
+
+        // ===== SKILLS CRUD =====
+        function editSkill(id) {
+            const skill = portfolioData.skills.find(s => s.id === id);
+            if (!skill) return;
+            document.getElementById('skill-id').value = skill.id;
+            document.getElementById('skill-category').value = skill.category;
+            document.getElementById('skill-icon').value = skill.icon || '';
+            document.getElementById('skill-desc').value = skill.desc || '';
+            document.getElementById('skill-tags').value = skill.tags.join(', ');
+            document.getElementById('skills-form-title').textContent = 'Edit Skill Category';
+            showForm('skills');
+        }
+
+        function saveSkill() {
+            const category = document.getElementById('skill-category').value.trim();
+            const tags = document.getElementById('skill-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+            if (!category) return showToast('Category name is required!', true);
+            if (!tags.length) return showToast('Add at least one skill tag!', true);
+
+            const id = document.getElementById('skill-id').value || 'skill_' + Date.now();
+            const icon = document.getElementById('skill-icon').value.trim() || '📦';
+            const desc = document.getElementById('skill-desc').value.trim();
+
+            const existing = portfolioData.skills.findIndex(s => s.id === id);
+            const skillObj = {
+                id, category, icon, desc, tags,
+                color: existing > -1 ? portfolioData.skills[existing].color : '#6c63ff',
+                bg: existing > -1 ? portfolioData.skills[existing].bg : 'rgba(108,99,255,0.1)'
+            };
+
+            if (existing > -1) portfolioData.skills[existing] = skillObj;
+            else portfolioData.skills.push(skillObj);
+
+            savePortfolioData(portfolioData);
+            hideForm('skills');
+            renderAll();
+            showToast(existing > -1 ? 'Skill updated!' : 'Skill added!');
+        }
+
+        // ===== EXPERIENCE CRUD =====
+        function editExperience(id) {
+            const exp = portfolioData.experience.find(e => e.id === id);
+            if (!exp) return;
+            document.getElementById('exp-id').value = exp.id;
+            document.getElementById('exp-role').value = exp.role;
+            document.getElementById('exp-company').value = exp.company;
+            document.getElementById('exp-date').value = exp.date;
+            document.getElementById('exp-desc').value = exp.desc;
+            document.getElementById('exp-tech').value = exp.tech.join(', ');
+            document.getElementById('exp-form-title').textContent = 'Edit Experience';
+            showForm('exp');
+        }
+
+        function saveExperience() {
+            const role = document.getElementById('exp-role').value.trim();
+            const company = document.getElementById('exp-company').value.trim();
+            if (!role || !company) return showToast('Role and Company are required!', true);
+
+            const id = document.getElementById('exp-id').value || 'exp_' + Date.now();
+            const date = document.getElementById('exp-date').value.trim();
+            const desc = document.getElementById('exp-desc').value.trim();
+            const tech = document.getElementById('exp-tech').value.split(',').map(t => t.trim()).filter(Boolean);
+
+            const existing = portfolioData.experience.findIndex(e => e.id === id);
+            const expObj = { id, role, company, date, desc, tech };
+
+            if (existing > -1) portfolioData.experience[existing] = expObj;
+            else portfolioData.experience.unshift(expObj);
+
+            savePortfolioData(portfolioData);
+            hideForm('exp');
+            renderAll();
+            showToast(existing > -1 ? 'Experience updated!' : 'Experience added!');
+        }
+
+        // ===== PROJECTS CRUD =====
+        function editProject(id) {
+            const proj = portfolioData.projects.find(p => p.id === id);
+            if (!proj) return;
+            document.getElementById('proj-id').value = proj.id;
+            document.getElementById('proj-name').value = proj.name;
+            document.getElementById('proj-category').value = proj.category;
+            document.getElementById('proj-type').value = proj.type || '';
+            document.getElementById('proj-desc').value = proj.desc;
+            document.getElementById('proj-tech').value = proj.tech.join(', ');
+            document.getElementById('proj-demo').value = proj.demoLink || '';
+            document.getElementById('proj-code').value = proj.codeLink || '';
+            document.getElementById('proj-image').value = proj.imageUrl || '';
+            document.getElementById('proj-form-title').textContent = 'Edit Project';
+            showForm('proj');
+        }
+
+        function saveProject() {
+            const name = document.getElementById('proj-name').value.trim();
+            const desc = document.getElementById('proj-desc').value.trim();
+            if (!name) return showToast('Project name is required!', true);
+
+            const id = document.getElementById('proj-id').value || 'proj_' + Date.now();
+            const category = document.getElementById('proj-category').value;
+            const type = document.getElementById('proj-type').value.trim() || category.charAt(0).toUpperCase() + category.slice(1) + ' Application';
+            const tech = document.getElementById('proj-tech').value.split(',').map(t => t.trim()).filter(Boolean);
+            const demoLink = document.getElementById('proj-demo').value.trim() || '#';
+            const codeLink = document.getElementById('proj-code').value.trim() || '#';
+            const imageUrl = document.getElementById('proj-image').value.trim();
+
+            const existing = portfolioData.projects.findIndex(p => p.id === id);
+            const projObj = {
+                id, name, category, type, desc, tech, demoLink, codeLink,
+                svg: existing > -1 ? portfolioData.projects[existing].svg : '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(108,99,255,0.5)" stroke-width="1"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+                bgGradient: existing > -1 ? portfolioData.projects[existing].bgGradient : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
+            };
+
+            if (imageUrl) {
+                projObj.imageUrl = imageUrl;
+            } else if (existing > -1 && portfolioData.projects[existing].imageUrl) {
+                // Remove it if the user cleared the field
+                delete projObj.imageUrl;
+            }
+
+            if (existing > -1) portfolioData.projects[existing] = projObj;
+            else portfolioData.projects.unshift(projObj);
+
+            savePortfolioData(portfolioData);
+            hideForm('proj');
+            renderAll();
+            showToast(existing > -1 ? 'Project updated!' : 'Project added!');
+        }
+
+        // ===== MESSAGES CRUD =====
+        // ===== MESSAGES CRUD =====
+        async function loadMessages() {
+            try {
+                const token = localStorage.getItem('cms_token');
+                const res = await fetch('/api/messages', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.status === 401 || res.status === 403) return handleLogout();
+                const json = await res.json();
+                if (json.success) {
+                    const msgs = json.data;
+                    document.getElementById('msg-count').textContent = msgs.length;
+                    const container = document.getElementById('msg-list');
+                    if (!msgs.length) {
+                        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><p>No messages yet.</p></div>`;
+                        return;
+                    }
+                    container.innerHTML = msgs.map(msg => `
+                        <div class="item-card">
+                            <div class="item-icon" style="background: rgba(0,212,170,0.1); color: var(--green);">💬</div>
+                            <div class="item-body">
+                                <div class="item-title">${msg.subject}</div>
+                                <div class="item-subtitle" style="margin-bottom: 8px;">From: ${msg.name} &lt;${msg.email}&gt; • ${new Date(msg.date).toLocaleDateString()}</div>
+                                <div style="font-size: 0.9rem; color: var(--text-primary); line-height: 1.5; white-space: pre-wrap; background: rgba(255,255,255,0.02); padding: 12px; border-radius: var(--radius-sm);">${msg.message}</div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-icon" onclick="deleteMessage('${msg.id}')" title="Delete" style="color: var(--danger); border-color: rgba(239,68,68,0.3);">🗑️</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function deleteMessage(id) {
+            if (!confirm('Delete this message forever?')) return;
+            try {
+                const token = localStorage.getItem('cms_token');
+                const res = await fetch('/api/messages/' + id, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.status === 401 || res.status === 403) return handleLogout();
+                const json = await res.json();
+                if (json.success) {
+                    showToast('Message deleted!');
+                    loadMessages();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // ===== RESET DATA =====
+        function resetData() {
+            if (!confirm('Reset ALL data to defaults? This will erase your changes.')) return;
+            resetPortfolioData();
+            showToast('Data reset to defaults!');
+        }
+
+        // ===== AUTHENTICATION =====
+        function checkAuth() {
+            const token = localStorage.getItem('cms_token');
+            if (token) {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                renderAll();
+                loadMessages();
+            } else {
+                document.getElementById('loginOverlay').classList.remove('hidden');
+            }
+        }
+
+        async function handleLogin() {
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            if (!user || !pass) return;
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    localStorage.setItem('cms_token', json.token);
+                    document.getElementById('loginError').style.display = 'none';
+                    checkAuth();
+                } else {
+                    document.getElementById('loginError').style.display = 'block';
+                }
+            } catch (e) {
+                document.getElementById('loginError').textContent = 'Server error';
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('cms_token');
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPass').value = '';
+            checkAuth();
+        }
+
+        // ===== INIT =====
+        checkAuth();
+    </script>
+</body>
+
+</html>
