@@ -8,9 +8,15 @@ const app = express();
 app.use(express.json());
 
 // ===== MONGODB CONNECTION =====
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ Connected to MongoDB Atlas'))
-  .catch(err => console.error('❌ MongoDB Connection Error:', err.message));
+const mongoURI = process.env.MONGO_URI;
+if (mongoURI) {
+    mongoose.connect(mongoURI)
+      .then(() => console.log('✅ Connected to MongoDB Atlas'))
+      .catch(err => console.error('❌ MongoDB Connection Error:', err.message));
+} else {
+    console.error('❌ Error: MONGO_URI environment variable is missing.');
+    console.error('👉 Please set MONGO_URI in your Render dashboard (Environment Variables).');
+}
 
 // ===== MONGOOSE MODELS =====
 const portfolioSchema = new mongoose.Schema({
@@ -230,10 +236,15 @@ function resetPortfolioData() {
     }
 });
 
+// Handle root route to serve the portfolio
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'portfolio.html'));
+});
+
 // IMPORTANT: Define this AFTER /data.js so express intercepts the request!
 app.use(express.static(__dirname));
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log('----------------------------------------------------');
     console.log('CMS Server is running with MongoDB Integrations!');
