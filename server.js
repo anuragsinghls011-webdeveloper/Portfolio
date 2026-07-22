@@ -102,7 +102,15 @@ app.post('/api/login', (req, res) => {
 app.post('/api/save', authenticateToken, async (req, res) => {
     try {
         const newData = req.body;
-        await Portfolio.findOneAndUpdate({}, newData, { upsert: true });
+        
+        if (mongoose.connection.readyState === 1) {
+            await Portfolio.findOneAndUpdate({}, { $set: newData }, { upsert: true });
+        }
+        
+        const fs = require('fs');
+        const backupPath = path.join(__dirname, 'default_data.json');
+        fs.writeFileSync(backupPath, JSON.stringify(newData, null, 4));
+        
         res.json({ success: true });
     } catch(err) {
         console.error(err);
@@ -116,7 +124,9 @@ app.post('/api/reset', authenticateToken, async (req, res) => {
         const backupPath = path.join(__dirname, 'default_data.json');
         if (fs.existsSync(backupPath)) {
             const backupData = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
-            await Portfolio.findOneAndUpdate({}, backupData, { upsert: true });
+            if (mongoose.connection.readyState === 1) {
+                await Portfolio.findOneAndUpdate({}, { $set: backupData }, { upsert: true });
+            }
             res.json({ success: true, data: backupData });
         } else {
             res.json({ success: false, message: 'No backup found' });
@@ -134,14 +144,27 @@ app.post('/api/contact', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Name, email, and message are required.' });
         }
         
-        await Message.create({
+        const newMsg = {
             id: 'msg_' + Date.now(),
             name,
             email,
             subject: subject || 'No Subject',
             message,
             date: new Date()
-        });
+        };
+        
+        if (mongoose.connection.readyState === 1) {
+            await Message.create(newMsg);
+        }
+        
+        const fs = require('fs');
+        const msgsPath = path.join(__dirname, 'messages.json');
+        let localMsgs = [];
+        if (fs.existsSync(msgsPath)) {
+            localMsgs = JSON.parse(fs.readFileSync(msgsPath, 'utf8'));
+        }
+        localMsgs.push(newMsg);
+        fs.writeFileSync(msgsPath, JSON.stringify(localMsgs, null, 4));
         
         res.json({ success: true });
     } catch(err) {
@@ -152,7 +175,17 @@ app.post('/api/contact', async (req, res) => {
 
 app.get('/api/messages', authenticateToken, async (req, res) => {
     try {
-        const messages = await Message.find().sort({ date: -1 });
+        let messages = [];
+        if (mongoose.connection.readyState === 1) {
+            messages = await Message.find().sort({ date: -1 });
+        } else {
+            const fs = require('fs');
+            const msgsPath = path.join(__dirname, 'messages.json');
+            if (fs.existsSync(msgsPath)) {
+                messages = JSON.parse(fs.readFileSync(msgsPath, 'utf8'));
+                messages.sort((a,b) => new Date(b.date) - new Date(a.date));
+            }
+        }
         res.json({ success: true, data: messages });
     } catch(err) {
         res.status(500).json({ success: false, error: err.message });
@@ -162,7 +195,18 @@ app.get('/api/messages', authenticateToken, async (req, res) => {
 app.delete('/api/messages/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
-        await Message.deleteOne({ id });
+        if (mongoose.connection.readyState === 1) {
+            await Message.deleteOne({ id });
+        }
+        
+        const fs = require('fs');
+        const msgsPath = path.join(__dirname, 'messages.json');
+        if (fs.existsSync(msgsPath)) {
+            let localMsgs = JSON.parse(fs.readFileSync(msgsPath, 'utf8'));
+            localMsgs = localMsgs.filter(m => m.id !== id);
+            fs.writeFileSync(msgsPath, JSON.stringify(localMsgs, null, 4));
+        }
+        
         res.json({ success: true });
     } catch(err) {
         res.status(500).json({ success: false, error: err.message });
