@@ -246,7 +246,10 @@ async function getPortfolioData() {
     if (portfolioDataCache) return portfolioDataCache;
     
     try {
-        const response = await fetch(`${API_BASE_URL}/api/portfolio`);
+        const response = await fetch(`${API_BASE_URL}/api/portfolio`, {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' }
+        });
         const json = await response.json();
         if (json.success && json.data) {
             portfolioDataCache = json.data;

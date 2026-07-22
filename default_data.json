@@ -67,15 +67,14 @@
             "bg": "rgba(97,218,251,0.1)",
             "tags": [
                 "React.js",
-                "Next.js",
+                
                 "TypeScript",
                 "JavaScript (ES6+)",
-                "Redux",
+                
                 "HTML5",
                 "CSS3 / SASS",
-                "Tailwind CSS",
-                "Material UI",
-                "Framer Motion"
+                "Tailwind CSS"
+                
             ]
         },
         {
@@ -89,10 +88,9 @@
                 "Node.js",
                 "Express.js",
                 "REST APIs",
-                "GraphQL",
-                "Socket.io",
+                
                 "JWT Auth",
-                "OAuth 2.0",
+               
                 "Middleware"
             ]
         },
@@ -106,11 +104,10 @@
             "tags": [
                 "MongoDB",
                 "Mongoose",
-                "PostgreSQL",
-                "MySQL",
+                
                 "Redis",
-                "Firebase",
-                "Prisma"
+                "Firebase"
+                
             ]
         },
         {
@@ -123,11 +120,7 @@
             "tags": [
                 "Git / GitHub",
                 "Docker",
-                "AWS",
-                "Vercel",
-                "Netlify",
-                "CI/CD",
-                "Jest",
+               
                 "Postman",
                 "Figma",
                 "VS Code"

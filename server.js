@@ -104,14 +104,10 @@ app.post('/api/save', authenticateToken, async (req, res) => {
     try {
         const newData = req.body;
         
-        if (mongoose.connection.readyState === 1) {
+        if (mongoose.connection.readyState >= 1) {
             await Portfolio.replaceOne({}, newData, { upsert: true });
         }
         
-        const fs = require('fs');
-        const backupPath = path.join(__dirname, 'default_data.json');
-        fs.writeFileSync(backupPath, JSON.stringify(newData, null, 4));
-
         res.json({ success: true });
     } catch(err) {
         console.error(err);
@@ -125,7 +121,7 @@ app.post('/api/reset', authenticateToken, async (req, res) => {
         const backupPath = path.join(__dirname, 'default_data.json');
         if (fs.existsSync(backupPath)) {
             const backupData = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
-            if (mongoose.connection.readyState === 1) {
+            if (mongoose.connection.readyState >= 1) {
                 await Portfolio.replaceOne({}, backupData, { upsert: true });
             }
 
@@ -155,18 +151,9 @@ app.post('/api/contact', async (req, res) => {
             date: new Date()
         };
         
-        if (mongoose.connection.readyState === 1) {
+        if (mongoose.connection.readyState >= 1) {
             await Message.create(newMsg);
         }
-        
-        const fs = require('fs');
-        const msgsPath = path.join(__dirname, 'messages.json');
-        let localMsgs = [];
-        if (fs.existsSync(msgsPath)) {
-            localMsgs = JSON.parse(fs.readFileSync(msgsPath, 'utf8'));
-        }
-        localMsgs.push(newMsg);
-        fs.writeFileSync(msgsPath, JSON.stringify(localMsgs, null, 4));
         
         res.json({ success: true });
     } catch(err) {
@@ -178,15 +165,8 @@ app.post('/api/contact', async (req, res) => {
 app.get('/api/messages', authenticateToken, async (req, res) => {
     try {
         let messages = [];
-        if (mongoose.connection.readyState === 1) {
+        if (mongoose.connection.readyState >= 1) {
             messages = await Message.find().sort({ date: -1 });
-        } else {
-            const fs = require('fs');
-            const msgsPath = path.join(__dirname, 'messages.json');
-            if (fs.existsSync(msgsPath)) {
-                messages = JSON.parse(fs.readFileSync(msgsPath, 'utf8'));
-                messages.sort((a,b) => new Date(b.date) - new Date(a.date));
-            }
         }
         res.json({ success: true, data: messages });
     } catch(err) {
@@ -197,16 +177,8 @@ app.get('/api/messages', authenticateToken, async (req, res) => {
 app.delete('/api/messages/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
-        if (mongoose.connection.readyState === 1) {
+        if (mongoose.connection.readyState >= 1) {
             await Message.deleteOne({ id });
-        }
-        
-        const fs = require('fs');
-        const msgsPath = path.join(__dirname, 'messages.json');
-        if (fs.existsSync(msgsPath)) {
-            let localMsgs = JSON.parse(fs.readFileSync(msgsPath, 'utf8'));
-            localMsgs = localMsgs.filter(m => m.id !== id);
-            fs.writeFileSync(msgsPath, JSON.stringify(localMsgs, null, 4));
         }
         
         res.json({ success: true });
@@ -220,7 +192,7 @@ app.get('/api/portfolio', async (req, res) => {
     try {
         let portfolioData = null;
         
-        if (mongoose.connection.readyState === 1) {
+        if (mongoose.connection.readyState >= 1) {
             try {
                 portfolioData = await Portfolio.findOne();
             } catch (dbErr) {
@@ -229,13 +201,7 @@ app.get('/api/portfolio', async (req, res) => {
         }
         
         if (!portfolioData) {
-            const fs = require('fs');
-            const backupPath = path.join(__dirname, 'default_data.json');
-            if (fs.existsSync(backupPath)) {
-                portfolioData = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
-            } else {
-                portfolioData = {};
-            }
+            portfolioData = {};
         }
         
         let cleanData = portfolioData._doc ? { ...portfolioData._doc } : portfolioData;

@@ -1974,6 +1974,16 @@ app.listen(3000,
                 if (badge) badge.textContent = h.badge || 'Available for freelance work';
                 if (desc) desc.textContent = h.description || '';
                 if (initials) initials.textContent = h.initials || 'AS';
+                
+                // Update Document Title and Meta tags dynamically
+                const fullName = `${h.firstName || 'Anurag'} ${h.lastName || 'Singh'}`;
+                document.title = `${fullName} — MERN Full Stack Developer`;
+                
+                // Update Footer name dynamically
+                const footerNameSpan = document.querySelector('#footer .highlight');
+                if (footerNameSpan) {
+                    footerNameSpan.textContent = fullName;
+                }
             }
 
             // ===== TYPEWRITER EFFECT =====
