@@ -172,7 +172,15 @@ app.delete('/api/messages/:id', authenticateToken, async (req, res) => {
 // ===== DYNAMIC DATA.JS INJECTION =====
 app.get('/data.js', async (req, res) => {
     try {
-        let portfolioData = await Portfolio.findOne();
+        let portfolioData = null;
+        
+        if (mongoose.connection.readyState === 1) {
+            try {
+                portfolioData = await Portfolio.findOne();
+            } catch (dbErr) {
+                console.error('DB query failed, falling back:', dbErr.message);
+            }
+        }
         
         if (!portfolioData) {
             const fs = require('fs');
