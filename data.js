@@ -237,13 +237,32 @@ const defaultData = {
     }
 };
 
-function getPortfolioData() {
+// API_BASE_URL can be set to your backend's deployed URL if the frontend is hosted separately (e.g. 'https://my-backend.onrender.com')
+const API_BASE_URL = '';
+
+let portfolioDataCache = null;
+
+async function getPortfolioData() {
+    if (portfolioDataCache) return portfolioDataCache;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/portfolio`);
+        const json = await response.json();
+        if (json.success && json.data) {
+            portfolioDataCache = json.data;
+            return portfolioDataCache;
+        }
+    } catch (err) {
+        console.error('Failed to fetch live portfolio data. Using default data fallback.', err);
+    }
+    
     return defaultData;
 }
 
 function savePortfolioData(data) {
+    portfolioDataCache = data;
     const token = localStorage.getItem('cms_token');
-    fetch('/api/save', {
+    fetch(`${API_BASE_URL}/api/save`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -263,7 +282,7 @@ function savePortfolioData(data) {
 
 function resetPortfolioData() {
     const token = localStorage.getItem('cms_token');
-    fetch('/api/reset', {
+    fetch(`${API_BASE_URL}/api/reset`, {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token }
     }).then(res => {

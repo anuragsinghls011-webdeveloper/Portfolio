@@ -1956,89 +1956,10 @@ app.listen(3000,
             });
         });
 
-        // ===== TYPEWRITER EFFECT =====
-        const typewriterElement = document.getElementById('typewriter');
-        const cmsHero = getPortfolioData().hero;
-        const typewriterTexts = cmsHero.typewriterTexts || [
-            'MERN Full Stack Developer',
-            'React.js Enthusiast',
-            'Node.js Backend Architect'
-        ];
-        let textIndex = 0;
-        let charIndex = 0;
-        let isDeleting = false;
-        let typingSpeed = 80;
-
-        function typeWriter() {
-            const currentText = typewriterTexts[textIndex];
-            if (isDeleting) {
-                typewriterElement.textContent = currentText.substring(0, charIndex - 1);
-                charIndex--;
-                typingSpeed = 40;
-            } else {
-                typewriterElement.textContent = currentText.substring(0, charIndex + 1);
-                charIndex++;
-                typingSpeed = 80;
-            }
-            if (!isDeleting && charIndex === currentText.length) {
-                typingSpeed = 2000;
-                isDeleting = true;
-            } else if (isDeleting && charIndex === 0) {
-                isDeleting = false;
-                textIndex = (textIndex + 1) % typewriterTexts.length;
-                typingSpeed = 300;
-            }
-            setTimeout(typeWriter, typingSpeed);
-        }
-        typeWriter();
-
-        // ===== COUNTER ANIMATION =====
-        function animateCounter(element, target, duration = 2000) {
-            const startTime = performance.now();
-            function update(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const eased = 1 - Math.pow(1 - progress, 3);
-                element.textContent = Math.floor(eased * target) + '+';
-                if (progress < 1) requestAnimationFrame(update);
-            }
-            requestAnimationFrame(update);
-        }
-
-        const heroObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    animateCounter(document.getElementById('statProjects'), cmsHero.statProjects || 50);
-                    animateCounter(document.getElementById('statExperience'), cmsHero.statExperience || 4);
-                    animateCounter(document.getElementById('statClients'), cmsHero.statClients || 30);
-                    heroObserver.disconnect();
-                }
-            });
-        }, { threshold: 0.5 });
-        heroObserver.observe(document.getElementById('hero'));
-
-        // ===== SCROLL REVEAL =====
-        const revealObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('revealed');
-                }
-            });
-        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
-
-        // ===== SCROLL TO TOP =====
-        const scrollTopBtn = document.getElementById('scrollTop');
-        window.addEventListener('scroll', () => {
-            scrollTopBtn.classList.toggle('visible', window.scrollY > 500);
-        });
-        scrollTopBtn.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-
         // ===== CMS DYNAMIC RENDERING =====
-        (function renderCMSData() {
-            const data = getPortfolioData();
+        (async function renderCMSData() {
+            const data = await getPortfolioData();
+            const cmsHero = data.hero || {};
 
             // Render Hero
             if (data.hero) {
@@ -2053,6 +1974,87 @@ app.listen(3000,
                 if (badge) badge.textContent = h.badge || 'Available for freelance work';
                 if (desc) desc.textContent = h.description || '';
                 if (initials) initials.textContent = h.initials || 'AS';
+            }
+
+            // ===== TYPEWRITER EFFECT =====
+            const typewriterElement = document.getElementById('typewriter');
+            const typewriterTexts = cmsHero.typewriterTexts || [
+                'MERN Full Stack Developer',
+                'React.js Enthusiast',
+                'Node.js Backend Architect'
+            ];
+            let textIndex = 0;
+            let charIndex = 0;
+            let isDeleting = false;
+            let typingSpeed = 80;
+
+            function typeWriter() {
+                const currentText = typewriterTexts[textIndex];
+                if (isDeleting) {
+                    typewriterElement.textContent = currentText.substring(0, charIndex - 1);
+                    charIndex--;
+                    typingSpeed = 40;
+                } else {
+                    typewriterElement.textContent = currentText.substring(0, charIndex + 1);
+                    charIndex++;
+                    typingSpeed = 80;
+                }
+                if (!isDeleting && charIndex === currentText.length) {
+                    typingSpeed = 2000;
+                    isDeleting = true;
+                } else if (isDeleting && charIndex === 0) {
+                    isDeleting = false;
+                    textIndex = (textIndex + 1) % typewriterTexts.length;
+                    typingSpeed = 300;
+                }
+                setTimeout(typeWriter, typingSpeed);
+            }
+            typeWriter();
+
+            // ===== COUNTER ANIMATION =====
+            function animateCounter(element, target, duration = 2000) {
+                const startTime = performance.now();
+                function update(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    element.textContent = Math.floor(eased * target) + '+';
+                    if (progress < 1) requestAnimationFrame(update);
+                }
+                requestAnimationFrame(update);
+            }
+
+            const heroObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateCounter(document.getElementById('statProjects'), cmsHero.statProjects || 5);
+                        animateCounter(document.getElementById('statExperience'), cmsHero.statExperience || 1);
+                        animateCounter(document.getElementById('statClients'), cmsHero.statClients || 2);
+                        heroObserver.disconnect();
+                    }
+                });
+            }, { threshold: 0.5 });
+            heroObserver.observe(document.getElementById('hero'));
+
+            // ===== SCROLL REVEAL =====
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+            document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+            // ===== SCROLL TO TOP =====
+            const scrollTopBtn = document.getElementById('scrollTop');
+            window.addEventListener('scroll', () => {
+                scrollTopBtn.classList.toggle('visible', window.scrollY > 500);
+            });
+            if (scrollTopBtn) {
+                scrollTopBtn.addEventListener('click', () => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
             }
 
             // Render About

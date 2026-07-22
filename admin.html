@@ -1147,7 +1147,7 @@
 
     <script src="data.js"></script>
     <script>
-        let portfolioData = getPortfolioData();
+        let portfolioData = null;
         let currentTab = 'skills';
 
         const tabTitles = {
@@ -1221,8 +1221,8 @@
         }
 
         // ===== UPDATE STATS =====
-        function updateStats() {
-            portfolioData = getPortfolioData();
+        async function updateStats() {
+            portfolioData = await getPortfolioData();
             document.getElementById('stat-skills').textContent = portfolioData.skills.length;
             document.getElementById('stat-exp').textContent = portfolioData.experience.length;
             document.getElementById('stat-proj').textContent = portfolioData.projects.length;
@@ -1234,8 +1234,8 @@
         }
 
         // ===== RENDER LISTS =====
-        function renderAll() {
-            updateStats();
+        async function renderAll() {
+            await updateStats();
             loadHeroForm();
             loadAboutForm();
             loadContactForm();
@@ -1639,11 +1639,11 @@
         }
 
         // ===== AUTHENTICATION =====
-        function checkAuth() {
+        async function checkAuth() {
             const token = localStorage.getItem('cms_token');
             if (token) {
                 document.getElementById('loginOverlay').classList.add('hidden');
-                renderAll();
+                await renderAll();
                 loadMessages();
             } else {
                 document.getElementById('loginOverlay').classList.remove('hidden');
