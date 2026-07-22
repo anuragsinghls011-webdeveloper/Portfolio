@@ -90,8 +90,8 @@ function authenticateToken(req, res, next) {
 
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
-    const expectedUser = (process.env.ADMIN_USERNAME || '').trim();
-    const expectedPass = (process.env.ADMIN_PASSWORD || '').trim();
+    const expectedUser = (process.env.ADMIN_USERNAME || 'admin').trim();
+    const expectedPass = (process.env.ADMIN_PASSWORD || 'password123').trim();
     if (username === expectedUser && password === expectedPass) {
         const token = jwt.sign({ username }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '24h' });
         res.json({ success: true, token });
