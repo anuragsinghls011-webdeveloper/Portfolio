@@ -5,7 +5,8 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // ===== MONGODB CONNECTION =====
 const mongoURI = process.env.MONGO_URI;
@@ -104,7 +105,7 @@ app.post('/api/save', authenticateToken, async (req, res) => {
         const newData = req.body;
         
         if (mongoose.connection.readyState === 1) {
-            await Portfolio.findOneAndUpdate({}, { $set: newData }, { upsert: true });
+            await Portfolio.replaceOne({}, newData, { upsert: true });
         }
         
         const fs = require('fs');
@@ -125,7 +126,7 @@ app.post('/api/reset', authenticateToken, async (req, res) => {
         if (fs.existsSync(backupPath)) {
             const backupData = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
             if (mongoose.connection.readyState === 1) {
-                await Portfolio.findOneAndUpdate({}, { $set: backupData }, { upsert: true });
+                await Portfolio.replaceOne({}, backupData, { upsert: true });
             }
             res.json({ success: true, data: backupData });
         } else {
