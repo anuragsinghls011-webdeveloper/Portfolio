@@ -112,6 +112,14 @@ app.post('/api/save', authenticateToken, async (req, res) => {
         const backupPath = path.join(__dirname, 'default_data.json');
         fs.writeFileSync(backupPath, JSON.stringify(newData, null, 4));
         
+        // Synchronize static data.js as well to ensure changes are always applicable
+        const dataJsPath = path.join(__dirname, 'data.js');
+        const cleanData = { ...newData };
+        delete cleanData._id;
+        delete cleanData.__v;
+        const dataJsContent = `// data.js - Centralized Data Management for Portfolio\n\nconst defaultData = ${JSON.stringify(cleanData, null, 4)};\n\nfunction getPortfolioData() {\n    return defaultData;\n}\n\nfunction savePortfolioData(data) {\n    const token = localStorage.getItem('cms_token');\n    fetch('/api/save', {\n        method: 'POST',\n        headers: {\n            'Content-Type': 'application/json',\n            'Authorization': 'Bearer ' + token\n        },\n        body: JSON.stringify(data)\n    }).then(res => {\n        if (res.status === 401 || res.status === 403) {\n            localStorage.removeItem('cms_token');\n            location.reload();\n        }\n        return res.json();\n    }).then(res => {\n        if (!res.success) console.error('Failed to save data dynamically.');\n    }).catch(err => console.error(err));\n}\n\nfunction resetPortfolioData() {\n    const token = localStorage.getItem('cms_token');\n    fetch('/api/reset', {\n        method: 'POST',\n        headers: { 'Authorization': 'Bearer ' + token }\n    }).then(res => {\n        if (res.status === 401 || res.status === 403) {\n            localStorage.removeItem('cms_token');\n        }\n        location.reload();\n    });\n}`;
+        fs.writeFileSync(dataJsPath, dataJsContent);
+
         res.json({ success: true });
     } catch(err) {
         console.error(err);
@@ -128,6 +136,12 @@ app.post('/api/reset', authenticateToken, async (req, res) => {
             if (mongoose.connection.readyState === 1) {
                 await Portfolio.replaceOne({}, backupData, { upsert: true });
             }
+            
+            // Synchronize static data.js as well
+            const dataJsPath = path.join(__dirname, 'data.js');
+            const dataJsContent = `// data.js - Centralized Data Management for Portfolio\n\nconst defaultData = ${JSON.stringify(backupData, null, 4)};\n\nfunction getPortfolioData() {\n    return defaultData;\n}\n\nfunction savePortfolioData(data) {\n    const token = localStorage.getItem('cms_token');\n    fetch('/api/save', {\n        method: 'POST',\n        headers: {\n            'Content-Type': 'application/json',\n            'Authorization': 'Bearer ' + token\n        },\n        body: JSON.stringify(data)\n    }).then(res => {\n        if (res.status === 401 || res.status === 403) {\n            localStorage.removeItem('cms_token');\n            location.reload();\n        }\n        return res.json();\n    }).then(res => {\n        if (!res.success) console.error('Failed to save data dynamically.');\n    }).catch(err => console.error(err));\n}\n\nfunction resetPortfolioData() {\n    const token = localStorage.getItem('cms_token');\n    fetch('/api/reset', {\n        method: 'POST',\n        headers: { 'Authorization': 'Bearer ' + token }\n    }).then(res => {\n        if (res.status === 401 || res.status === 403) {\n            localStorage.removeItem('cms_token');\n        }\n        location.reload();\n    });\n}`;
+            fs.writeFileSync(dataJsPath, dataJsContent);
+
             res.json({ success: true, data: backupData });
         } else {
             res.json({ success: false, message: 'No backup found' });
