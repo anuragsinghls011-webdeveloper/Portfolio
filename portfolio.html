@@ -2459,8 +2459,8 @@ app.listen(3000,
               function animate(currentTime) {
                 if (currentFrameIndex >= frameCount) {
                   isPlaying = false;
-                  // Unlock scrolling so user can proceed down the page
-                  document.body.style.overflow = 'auto';
+                  // Unlock scrolling so user can proceed down the page without breaking layout
+                  document.body.style.overflow = '';
                   return; 
                 }
                 
