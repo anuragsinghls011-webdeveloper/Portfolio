@@ -640,7 +640,7 @@
 
         /* ===== HERO ANIMATION ===== */
         .scroll-container {
-            height: 200vh;
+            height: 100vh;
             width: 100%;
             position: relative;
             background-color: var(--bg-primary);
@@ -653,8 +653,7 @@
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            position: sticky;
-            top: 0;
+            position: relative;
         }
 
         canvas#hero-lightpass {
@@ -2394,57 +2393,80 @@ app.listen(3000,
               }
             }, 50);
 
+            let isPlaying = false;
+            let currentFrameIndex = 0;
+            let animationTriggered = false;
+
             window.addEventListener('scroll', () => {  
+              if (isPlaying) return;
+
               const targetSection = document.getElementById('hero-animation');
               if (!targetSection) return;
 
-              // Calculate scroll progress within the target section
-              const rect = targetSection.getBoundingClientRect();
-              
-              // We want animation to start when the sticky container hits the top of the viewport (rect.top <= 0)
-              // and finish when we scroll past it (rect.bottom <= window.innerHeight)
-              
-              // Total scroll distance is section height minus window height
-              const scrollDistance = targetSection.offsetHeight - window.innerHeight;
-              
-              if (scrollDistance <= 0) return;
+              const triggerStart = window.innerHeight * 0.3;
+              const triggerEnd = targetSection.offsetTop + targetSection.offsetHeight;
+              const isInZone = window.scrollY >= triggerStart && window.scrollY < triggerEnd;
 
-              // Scrolled amount within the section
-              let scrolled = -rect.top;
-              
-              // Clamp scroll fraction between 0 and 1
-              const scrollFraction = Math.max(0, Math.min(1, scrolled / scrollDistance));
+              // Reset the animation completely if the user leaves the zone (top or bottom)
+              if (!isInZone && animationTriggered) {
+                animationTriggered = false;
+                currentFrameIndex = 0;
+                if (images[0] && images[0].complete) {
+                  context.clearRect(0, 0, canvas.width, canvas.height);
+                  context.drawImage(images[0], 0, 0);
+                }
+              }
 
-              const frameIndex = Math.min(
-                frameCount - 1,
-                Math.floor(scrollFraction * frameCount)
-              );
-              
-              requestAnimationFrame(() => updateImage(frameIndex));
+              // Play animation if they enter the zone
+              if (isInZone && !animationTriggered) {
+                animationTriggered = true;
+                playAnimation();
+              }
             });
 
-            function updateImage(index) {
-              const img = images[index];
-              if (img && img.complete) {
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                context.drawImage(img, 0, 0);
+            function playAnimation() {
+              if (isPlaying) return;
+              isPlaying = true;
+
+              let lastTime = 0;
+              const fps = 45; 
+              const fpsInterval = 1000 / fps;
+              
+              function animate(currentTime) {
+                if (currentFrameIndex >= frameCount) {
+                  isPlaying = false;
+                  return; 
+                }
+                
+                requestAnimationFrame(animate);
+                
+                if (!lastTime) {
+                  lastTime = currentTime;
+                }
+                
+                const elapsed = currentTime - lastTime;
+                
+                if (elapsed > fpsInterval) {
+                  lastTime = currentTime - (elapsed % fpsInterval);
+                  
+                  const img = images[currentFrameIndex];
+                  if (img && img.complete) {
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    context.drawImage(img, 0, 0);
+                  }
+                  currentFrameIndex++;
+                }
               }
+              
+              requestAnimationFrame(animate);
             }
 
             // Ensure frame stays drawn if user resizes
             window.addEventListener('resize', () => {
-              const targetSection = document.getElementById('hero-animation');
-              if (!targetSection) return;
-              
-              const rect = targetSection.getBoundingClientRect();
-              const scrollDistance = targetSection.offsetHeight - window.innerHeight;
-              if (scrollDistance <= 0) return;
-              
-              let scrolled = -rect.top;
-              const scrollFraction = Math.max(0, Math.min(1, scrolled / scrollDistance));
-              const frameIndex = Math.min(frameCount - 1, Math.floor(scrollFraction * frameCount));
-              
-              updateImage(frameIndex);
+              const currentImg = images[currentFrameIndex >= frameCount ? frameCount - 1 : currentFrameIndex];
+              if (currentImg && currentImg.complete) {
+                context.drawImage(currentImg, 0, 0);
+              }
             });
         })();
     </script>
