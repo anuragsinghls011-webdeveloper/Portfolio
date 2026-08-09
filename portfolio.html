@@ -2396,9 +2396,10 @@ app.listen(3000,
             let isPlaying = false;
             let currentFrameIndex = 0;
             let animationTriggered = false;
+            let isAutoScrolling = false;
 
             window.addEventListener('scroll', () => {  
-              if (isPlaying) return;
+              if (isPlaying || isAutoScrolling) return;
 
               const targetSection = document.getElementById('hero-animation');
               if (!targetSection) return;
@@ -2420,7 +2421,30 @@ app.listen(3000,
               // Play animation if they enter the zone
               if (isInZone && !animationTriggered) {
                 animationTriggered = true;
-                playAnimation();
+                isAutoScrolling = true;
+                
+                const preventScroll = (e) => e.preventDefault();
+                const preventKeys = (e) => {
+                    if(["Space", "ArrowUp", "ArrowDown", "PageUp", "PageDown"].includes(e.code)) {
+                        e.preventDefault();
+                    }
+                };
+                window.addEventListener('wheel', preventScroll, { passive: false });
+                window.addEventListener('touchmove', preventScroll, { passive: false });
+                window.addEventListener('keydown', preventKeys, { passive: false });
+
+                targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                setTimeout(() => {
+                    window.scrollTo(0, targetSection.offsetTop);
+                    
+                    document.body.style.overflow = 'hidden';
+                    window.removeEventListener('wheel', preventScroll);
+                    window.removeEventListener('touchmove', preventScroll);
+                    window.removeEventListener('keydown', preventKeys);
+                    isAutoScrolling = false;
+                    playAnimation();
+                }, 800);
               }
             });
 
@@ -2435,6 +2459,8 @@ app.listen(3000,
               function animate(currentTime) {
                 if (currentFrameIndex >= frameCount) {
                   isPlaying = false;
+                  // Unlock scrolling so user can proceed down the page
+                  document.body.style.overflow = 'auto';
                   return; 
                 }
                 
