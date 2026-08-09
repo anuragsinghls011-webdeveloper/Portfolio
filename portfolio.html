@@ -2393,8 +2393,15 @@ app.listen(3000,
             window.addEventListener('scroll', () => {  
               if (isPlaying || isAutoScrolling) return;
 
-              // Reset the animation completely if the user scrolls back to the very top
-              if (window.scrollY < 50) {
+              const targetSection = document.getElementById('hero-animation');
+              if (!targetSection) return;
+
+              const triggerStart = window.innerHeight * 0.3;
+              const triggerEnd = targetSection.offsetTop + targetSection.offsetHeight;
+              const isInZone = window.scrollY >= triggerStart && window.scrollY < triggerEnd;
+
+              // Reset the animation completely if the user leaves the zone (top or bottom)
+              if (!isInZone && animationTriggered) {
                 animationTriggered = false;
                 currentFrameIndex = 0;
                 if (images[0] && images[0].complete) {
@@ -2403,38 +2410,33 @@ app.listen(3000,
                 }
               }
 
-              // Play animation if they hit 30% of viewport
-              if (window.scrollY >= window.innerHeight * 0.3 && !animationTriggered) {
+              // Play animation if they enter the zone
+              if (isInZone && !animationTriggered) {
                 animationTriggered = true;
                 isAutoScrolling = true;
                 
-                const targetSection = document.getElementById('hero-animation');
-                if (targetSection) {
-                    // Prevent user scrolling while auto-scrolling
-                    const preventScroll = (e) => e.preventDefault();
-                    const preventKeys = (e) => {
-                        if(["Space", "ArrowUp", "ArrowDown", "PageUp", "PageDown"].includes(e.code)) {
-                            e.preventDefault();
-                        }
-                    };
-                    window.addEventListener('wheel', preventScroll, { passive: false });
-                    window.addEventListener('touchmove', preventScroll, { passive: false });
-                    window.addEventListener('keydown', preventKeys, { passive: false });
+                const preventScroll = (e) => e.preventDefault();
+                const preventKeys = (e) => {
+                    if(["Space", "ArrowUp", "ArrowDown", "PageUp", "PageDown"].includes(e.code)) {
+                        e.preventDefault();
+                    }
+                };
+                window.addEventListener('wheel', preventScroll, { passive: false });
+                window.addEventListener('touchmove', preventScroll, { passive: false });
+                window.addEventListener('keydown', preventKeys, { passive: false });
 
-                    targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                setTimeout(() => {
+                    window.scrollTo(0, targetSection.offsetTop);
                     
-                    setTimeout(() => {
-                        // Snap precisely to the section to prevent any split-screen misalignment
-                        window.scrollTo(0, targetSection.offsetTop);
-                        
-                        document.body.style.overflow = 'hidden';
-                        window.removeEventListener('wheel', preventScroll);
-                        window.removeEventListener('touchmove', preventScroll);
-                        window.removeEventListener('keydown', preventKeys);
-                        isAutoScrolling = false;
-                        playAnimation();
-                    }, 800);
-                }
+                    document.body.style.overflow = 'hidden';
+                    window.removeEventListener('wheel', preventScroll);
+                    window.removeEventListener('touchmove', preventScroll);
+                    window.removeEventListener('keydown', preventKeys);
+                    isAutoScrolling = false;
+                    playAnimation();
+                }, 800);
               }
             });
 
