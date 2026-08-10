@@ -640,20 +640,21 @@
 
         /* ===== HERO ANIMATION ===== */
         .scroll-container {
-            height: 100vh;
+            height: 500vh;
             width: 100%;
             position: relative;
-            background-color: var(--bg-primary);
+            background-color: transparent;
         }
         
         .sticky-container {
+            position: sticky;
+            top: 0;
             height: 100vh;
             width: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            position: relative;
         }
 
         canvas#hero-lightpass {
@@ -2362,138 +2363,115 @@ app.listen(3000,
             });
         });
 
-        // ===== HERO SCROLL ANIMATION =====
+        // ===== HERO SCROLL ANIMATION (Scroll-driven, no screen locking) =====
         (function() {
             const canvas = document.getElementById("hero-lightpass");
             if (!canvas) return;
             const context = canvas.getContext("2d");
+            const scrollContainer = document.getElementById('hero-animation');
+            if (!scrollContainer) return;
 
             const frameCount = 240;
             const currentFrame = index => (
               `images/ezgif-frame-${(index + 1).toString().padStart(3, '0')}.jpg`
             );
 
+            // Preload all frames
             const images = [];
-            const preloadImages = () => {
+            let loadedCount = 0;
+
+            function preloadImages() {
               for (let i = 0; i < frameCount; i++) {
                 const img = new Image();
                 img.src = currentFrame(i);
+                img.onload = () => {
+                  loadedCount++;
+                  if (loadedCount === frameCount) {
+                    resizeCanvas();
+                    renderFrame();
+                  }
+                };
                 images.push(img);
               }
-            };
-            preloadImages();
-
-            // Draw first frame once loaded
-            const drawFirstFrame = setInterval(() => {
-              if (images[0] && images[0].complete) {
-                canvas.width = images[0].width;
-                canvas.height = images[0].height;
-                context.drawImage(images[0], 0, 0);
-                clearInterval(drawFirstFrame);
-              }
-            }, 50);
-
-            let isPlaying = false;
-            let currentFrameIndex = 0;
-            let animationTriggered = false;
-            let isAutoScrolling = false;
-
-            window.addEventListener('scroll', () => {  
-              if (isPlaying || isAutoScrolling) return;
-
-              const targetSection = document.getElementById('hero-animation');
-              if (!targetSection) return;
-
-              const triggerStart = window.innerHeight * 0.3;
-              const triggerEnd = targetSection.offsetTop + targetSection.offsetHeight;
-              const isInZone = window.scrollY >= triggerStart && window.scrollY < triggerEnd;
-
-              // Reset the animation completely if the user leaves the zone (top or bottom)
-              if (!isInZone && animationTriggered) {
-                animationTriggered = false;
-                currentFrameIndex = 0;
-                if (images[0] && images[0].complete) {
-                  context.clearRect(0, 0, canvas.width, canvas.height);
-                  context.drawImage(images[0], 0, 0);
-                }
-              }
-
-              // Play animation if they enter the zone
-              if (isInZone && !animationTriggered) {
-                animationTriggered = true;
-                isAutoScrolling = true;
-                
-                const preventScroll = (e) => e.preventDefault();
-                const preventKeys = (e) => {
-                    if(["Space", "ArrowUp", "ArrowDown", "PageUp", "PageDown"].includes(e.code)) {
-                        e.preventDefault();
-                    }
-                };
-                window.addEventListener('wheel', preventScroll, { passive: false });
-                window.addEventListener('touchmove', preventScroll, { passive: false });
-                window.addEventListener('keydown', preventKeys, { passive: false });
-
-                targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                
-                setTimeout(() => {
-                    window.scrollTo(0, targetSection.offsetTop);
-                    
-                    document.body.style.overflow = 'hidden';
-                    window.removeEventListener('wheel', preventScroll);
-                    window.removeEventListener('touchmove', preventScroll);
-                    window.removeEventListener('keydown', preventKeys);
-                    isAutoScrolling = false;
-                    playAnimation();
-                }, 800);
-              }
-            });
-
-            function playAnimation() {
-              if (isPlaying) return;
-              isPlaying = true;
-
-              let lastTime = 0;
-              const fps = 45; 
-              const fpsInterval = 1000 / fps;
-              
-              function animate(currentTime) {
-                if (currentFrameIndex >= frameCount) {
-                  isPlaying = false;
-                  // Unlock scrolling so user can proceed down the page without breaking layout
-                  document.body.style.overflow = '';
-                  return; 
-                }
-                
-                requestAnimationFrame(animate);
-                
-                if (!lastTime) {
-                  lastTime = currentTime;
-                }
-                
-                const elapsed = currentTime - lastTime;
-                
-                if (elapsed > fpsInterval) {
-                  lastTime = currentTime - (elapsed % fpsInterval);
-                  
-                  const img = images[currentFrameIndex];
-                  if (img && img.complete) {
-                    context.clearRect(0, 0, canvas.width, canvas.height);
-                    context.drawImage(img, 0, 0);
-                  }
-                  currentFrameIndex++;
-                }
-              }
-              
-              requestAnimationFrame(animate);
             }
 
-            // Ensure frame stays drawn if user resizes
-            window.addEventListener('resize', () => {
-              const currentImg = images[currentFrameIndex >= frameCount ? frameCount - 1 : currentFrameIndex];
-              if (currentImg && currentImg.complete) {
-                context.drawImage(currentImg, 0, 0);
+            // Canvas sizing
+            function resizeCanvas() {
+              const img = images[0];
+              if (!img || !img.complete) return;
+              canvas.width = img.naturalWidth;
+              canvas.height = img.naturalHeight;
+            }
+
+            // Scroll → frame mapping (scoped to the scroll-container section)
+            let lastDrawnFrame = -1;
+            let targetFrame = 0;
+            let displayedFrame = 0;
+            let rafId = null;
+
+            function getScrollFrame() {
+              const containerTop = scrollContainer.offsetTop;
+              const containerHeight = scrollContainer.offsetHeight;
+              const scrollableDistance = containerHeight - window.innerHeight;
+              if (scrollableDistance <= 0) return 0;
+
+              const scrolledIntoContainer = window.scrollY - containerTop;
+              const scrollFraction = Math.max(0, Math.min(1, scrolledIntoContainer / scrollableDistance));
+              return Math.min(frameCount - 1, Math.max(0, Math.floor(scrollFraction * (frameCount - 1))));
+            }
+
+            function drawFrame(frameIndex) {
+              if (frameIndex === lastDrawnFrame) return;
+              const img = images[frameIndex];
+              if (!img || !img.complete) return;
+              context.clearRect(0, 0, canvas.width, canvas.height);
+              context.drawImage(img, 0, 0);
+              lastDrawnFrame = frameIndex;
+            }
+
+            // Smooth rendering loop with lerp
+            function renderFrame() {
+              targetFrame = getScrollFrame();
+              const lerpFactor = 0.3;
+              displayedFrame += (targetFrame - displayedFrame) * lerpFactor;
+              const roundedFrame = Math.round(displayedFrame);
+              if (Math.abs(displayedFrame - targetFrame) < 0.5) {
+                displayedFrame = targetFrame;
               }
+              drawFrame(roundedFrame);
+              if (roundedFrame !== targetFrame) {
+                rafId = requestAnimationFrame(renderFrame);
+              } else {
+                rafId = null;
+              }
+            }
+
+            function scheduleRender() {
+              if (rafId === null) {
+                rafId = requestAnimationFrame(renderFrame);
+              }
+            }
+
+            // Event listeners — passive scroll, no locking
+            window.addEventListener('scroll', scheduleRender, { passive: true });
+
+            window.addEventListener('resize', () => {
+              resizeCanvas();
+              lastDrawnFrame = -1;
+              scheduleRender();
             });
+
+            // Kick off
+            preloadImages();
+
+            // Draw the first frame as soon as it loads
+            const firstFramePoll = setInterval(() => {
+              if (images[0] && images[0].complete) {
+                resizeCanvas();
+                drawFrame(0);
+                clearInterval(firstFramePoll);
+              }
+            }, 50);
         })();
     </script>
 </body>
