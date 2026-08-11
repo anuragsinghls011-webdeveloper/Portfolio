@@ -638,45 +638,6 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
-        /* ===== HERO ANIMATION ===== */
-        .scroll-container {
-            height: 500vh;
-            width: 100%;
-            position: relative;
-            background-color: transparent;
-        }
-        
-        .sticky-container {
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-
-        canvas#hero-lightpass {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
-            z-index: 1;
-        }
-
-        @media (max-width: 768px) {
-            canvas#hero-lightpass {
-                object-fit: contain;
-                width: 100%;
-                height: 100%;
-            }
-        }
-
-        /* ===== ABOUT SECTION ===== */
         #about {
             padding: var(--section-padding);
             position: relative;
@@ -1766,13 +1727,6 @@ app.listen(3000,
         </div>
     </section>
 
-    <!-- ===== SCROLL ANIMATION ===== -->
-    <section id="hero-animation" class="scroll-container">
-        <div class="sticky-container">
-            <canvas id="hero-lightpass"></canvas>
-        </div>
-    </section>
-
     <!-- ===== ABOUT SECTION ===== -->
     <section id="about">
         <div class="container">
@@ -2363,116 +2317,6 @@ app.listen(3000,
             });
         });
 
-        // ===== HERO SCROLL ANIMATION (Scroll-driven, no screen locking) =====
-        (function() {
-            const canvas = document.getElementById("hero-lightpass");
-            if (!canvas) return;
-            const context = canvas.getContext("2d");
-            const scrollContainer = document.getElementById('hero-animation');
-            if (!scrollContainer) return;
-
-            const frameCount = 240;
-            const currentFrame = index => (
-              `images/ezgif-frame-${(index + 1).toString().padStart(3, '0')}.jpg`
-            );
-
-            // Preload all frames
-            const images = [];
-            let loadedCount = 0;
-
-            function preloadImages() {
-              for (let i = 0; i < frameCount; i++) {
-                const img = new Image();
-                img.src = currentFrame(i);
-                img.onload = () => {
-                  loadedCount++;
-                  if (loadedCount === frameCount) {
-                    resizeCanvas();
-                    renderFrame();
-                  }
-                };
-                images.push(img);
-              }
-            }
-
-            // Canvas sizing
-            function resizeCanvas() {
-              const img = images[0];
-              if (!img || !img.complete) return;
-              canvas.width = img.naturalWidth;
-              canvas.height = img.naturalHeight;
-            }
-
-            // Scroll → frame mapping (scoped to the scroll-container section)
-            let lastDrawnFrame = -1;
-            let targetFrame = 0;
-            let displayedFrame = 0;
-            let rafId = null;
-
-            function getScrollFrame() {
-              const containerTop = scrollContainer.offsetTop;
-              const containerHeight = scrollContainer.offsetHeight;
-              const scrollableDistance = containerHeight - window.innerHeight;
-              if (scrollableDistance <= 0) return 0;
-
-              const scrolledIntoContainer = window.scrollY - containerTop;
-              const scrollFraction = Math.max(0, Math.min(1, scrolledIntoContainer / scrollableDistance));
-              return Math.min(frameCount - 1, Math.max(0, Math.floor(scrollFraction * (frameCount - 1))));
-            }
-
-            function drawFrame(frameIndex) {
-              if (frameIndex === lastDrawnFrame) return;
-              const img = images[frameIndex];
-              if (!img || !img.complete) return;
-              context.clearRect(0, 0, canvas.width, canvas.height);
-              context.drawImage(img, 0, 0);
-              lastDrawnFrame = frameIndex;
-            }
-
-            // Smooth rendering loop with lerp
-            function renderFrame() {
-              targetFrame = getScrollFrame();
-              const lerpFactor = 0.3;
-              displayedFrame += (targetFrame - displayedFrame) * lerpFactor;
-              const roundedFrame = Math.round(displayedFrame);
-              if (Math.abs(displayedFrame - targetFrame) < 0.5) {
-                displayedFrame = targetFrame;
-              }
-              drawFrame(roundedFrame);
-              if (roundedFrame !== targetFrame) {
-                rafId = requestAnimationFrame(renderFrame);
-              } else {
-                rafId = null;
-              }
-            }
-
-            function scheduleRender() {
-              if (rafId === null) {
-                rafId = requestAnimationFrame(renderFrame);
-              }
-            }
-
-            // Event listeners — passive scroll, no locking
-            window.addEventListener('scroll', scheduleRender, { passive: true });
-
-            window.addEventListener('resize', () => {
-              resizeCanvas();
-              lastDrawnFrame = -1;
-              scheduleRender();
-            });
-
-            // Kick off
-            preloadImages();
-
-            // Draw the first frame as soon as it loads
-            const firstFramePoll = setInterval(() => {
-              if (images[0] && images[0].complete) {
-                resizeCanvas();
-                drawFrame(0);
-                clearInterval(firstFramePoll);
-              }
-            }, 50);
-        })();
     </script>
 </body>
 </html>
