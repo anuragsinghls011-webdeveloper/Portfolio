@@ -1281,6 +1281,14 @@
             renderServices();
         }
 
+        // SECURITY: HTML escape helper to prevent XSS
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return '';
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
         function renderSkills() {
             const container = document.getElementById('skills-list');
             if (!portfolioData.skills.length) {
@@ -1289,15 +1297,15 @@
             }
             container.innerHTML = portfolioData.skills.map(skill => `
                 <div class="item-card">
-                    <div class="item-icon" style="background: ${skill.bg || 'rgba(108,99,255,0.08)'};">${skill.icon || '📦'}</div>
+                    <div class="item-icon" style="background: ${escapeHtml(skill.bg || 'rgba(108,99,255,0.08)')};">${escapeHtml(skill.icon || '📦')}</div>
                     <div class="item-body">
-                        <div class="item-title">${skill.category}</div>
-                        <div class="item-subtitle">${skill.desc || 'No description'}</div>
-                        <div class="item-tags">${skill.tags.slice(0, 5).map(t => `<span class="item-tag">${t}</span>`).join('')}${skill.tags.length > 5 ? `<span class="item-tag">+${skill.tags.length - 5} more</span>` : ''}</div>
+                        <div class="item-title">${escapeHtml(skill.category)}</div>
+                        <div class="item-subtitle">${escapeHtml(skill.desc || 'No description')}</div>
+                        <div class="item-tags">${skill.tags.slice(0, 5).map(t => `<span class="item-tag">${escapeHtml(t)}</span>`).join('')}${skill.tags.length > 5 ? `<span class="item-tag">+${skill.tags.length - 5} more</span>` : ''}</div>
                     </div>
                     <div class="item-actions">
-                        <button class="btn btn-outline btn-sm" onclick="editSkill('${skill.id}')">✏️ Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteItem('skills','${skill.id}')">🗑️</button>
+                        <button class="btn btn-outline btn-sm" onclick="editSkill('${escapeHtml(skill.id)}')">✏️ Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteItem('skills','${escapeHtml(skill.id)}')">🗑️</button>
                     </div>
                 </div>
             `).join('');
@@ -1313,13 +1321,13 @@
                 <div class="item-card">
                     <div class="item-icon" style="background: var(--green-bg);">💼</div>
                     <div class="item-body">
-                        <div class="item-title">${exp.role}</div>
-                        <div class="item-subtitle">${exp.company} · ${exp.date}</div>
-                        <div class="item-tags">${exp.tech.map(t => `<span class="item-tag">${t}</span>`).join('')}</div>
+                        <div class="item-title">${escapeHtml(exp.role)}</div>
+                        <div class="item-subtitle">${escapeHtml(exp.company)} · ${escapeHtml(exp.date)}</div>
+                        <div class="item-tags">${exp.tech.map(t => `<span class="item-tag">${escapeHtml(t)}</span>`).join('')}</div>
                     </div>
                     <div class="item-actions">
-                        <button class="btn btn-outline btn-sm" onclick="editExperience('${exp.id}')">✏️ Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteItem('experience','${exp.id}')">🗑️</button>
+                        <button class="btn btn-outline btn-sm" onclick="editExperience('${escapeHtml(exp.id)}')">✏️ Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteItem('experience','${escapeHtml(exp.id)}')">🗑️</button>
                     </div>
                 </div>
             `).join('');
@@ -1335,13 +1343,13 @@
                 <div class="item-card">
                     <div class="item-icon" style="background: var(--pink-bg);">🚀</div>
                     <div class="item-body">
-                        <div class="item-title">${proj.name}</div>
-                        <div class="item-subtitle">${proj.type || proj.category}</div>
-                        <div class="item-tags">${proj.tech.map(t => `<span class="item-tag">${t}</span>`).join('')}</div>
+                        <div class="item-title">${escapeHtml(proj.name)}</div>
+                        <div class="item-subtitle">${escapeHtml(proj.type || proj.category)}</div>
+                        <div class="item-tags">${proj.tech.map(t => `<span class="item-tag">${escapeHtml(t)}</span>`).join('')}</div>
                     </div>
                     <div class="item-actions">
-                        <button class="btn btn-outline btn-sm" onclick="editProject('${proj.id}')">✏️ Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteItem('projects','${proj.id}')">🗑️</button>
+                        <button class="btn btn-outline btn-sm" onclick="editProject('${escapeHtml(proj.id)}')">✏️ Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteItem('projects','${escapeHtml(proj.id)}')">🗑️</button>
                     </div>
                 </div>
             `).join('');
@@ -1429,14 +1437,14 @@
             }
             container.innerHTML = portfolioData.services.map(svc => `
                 <div class="item-card">
-                    <div class="item-icon" style="background: var(--bg-card);">${svc.icon || '⚙️'}</div>
+                    <div class="item-icon" style="background: var(--bg-card);">${escapeHtml(svc.icon || '⚙️')}</div>
                     <div class="item-body">
-                        <div class="item-title">${svc.name}</div>
-                        <div class="item-subtitle">${svc.desc || 'No description'}</div>
+                        <div class="item-title">${escapeHtml(svc.name)}</div>
+                        <div class="item-subtitle">${escapeHtml(svc.desc || 'No description')}</div>
                     </div>
                     <div class="item-actions">
-                        <button class="btn btn-outline btn-sm" onclick="editService('${svc.id}')">✏️ Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteItem('services','${svc.id}')">🗑️</button>
+                        <button class="btn btn-outline btn-sm" onclick="editService('${escapeHtml(svc.id)}')">✏️ Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteItem('services','${escapeHtml(svc.id)}')">🗑️</button>
                     </div>
                 </div>
             `).join('');
@@ -1633,12 +1641,12 @@
                         <div class="item-card">
                             <div class="item-icon" style="background: rgba(0,212,170,0.1); color: var(--green);">💬</div>
                             <div class="item-body">
-                                <div class="item-title">${msg.subject}</div>
-                                <div class="item-subtitle" style="margin-bottom: 8px;">From: ${msg.name} &lt;${msg.email}&gt; • ${new Date(msg.date).toLocaleDateString()}</div>
-                                <div style="font-size: 0.9rem; color: var(--text-primary); line-height: 1.5; white-space: pre-wrap; background: rgba(255,255,255,0.02); padding: 12px; border-radius: var(--radius-sm);">${msg.message}</div>
+                                <div class="item-title">${escapeHtml(msg.subject)}</div>
+                                <div class="item-subtitle" style="margin-bottom: 8px;">From: ${escapeHtml(msg.name)} &lt;${escapeHtml(msg.email)}&gt; • ${new Date(msg.date).toLocaleDateString()}</div>
+                                <div style="font-size: 0.9rem; color: var(--text-primary); line-height: 1.5; white-space: pre-wrap; background: rgba(255,255,255,0.02); padding: 12px; border-radius: var(--radius-sm);">${escapeHtml(msg.message)}</div>
                             </div>
                             <div class="item-actions">
-                                <button class="btn-icon" onclick="deleteMessage('${msg.id}')" title="Delete" style="color: var(--danger); border-color: rgba(239,68,68,0.3);">🗑️</button>
+                                <button class="btn-icon" onclick="deleteMessage('${escapeHtml(msg.id)}')" title="Delete" style="color: var(--danger); border-color: rgba(239,68,68,0.3);">🗑️</button>
                             </div>
                         </div>
                     `).join('');
@@ -1717,7 +1725,17 @@
             }
         }
 
-        function handleLogout() {
+        async function handleLogout() {
+            // SECURITY: Invalidate token on server before clearing local storage
+            try {
+                const token = localStorage.getItem('cms_token');
+                if (token) {
+                    await fetch('/api/logout', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                }
+            } catch(e) { /* ignore */ }
             localStorage.removeItem('cms_token');
             document.getElementById('loginUser').value = '';
             document.getElementById('loginPass').value = '';
