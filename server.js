@@ -81,7 +81,7 @@ app.use(globalLimiter);
 // ===== SECURITY: Strict Login Rate Limiter (Brute-Force Protection) =====
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // Only 5 login attempts per 15 min
+    max: 15, // 15 login attempts per 15 min
     standardHeaders: true,
     legacyHeaders: false,
     message: { success: false, error: 'Too many login attempts. Account locked for 15 minutes.' },
@@ -93,7 +93,7 @@ const loginLimiter = rateLimit({
 // ===== SECURITY: Contact Form Rate Limiter (Spam Protection) =====
 const contactLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 10, // 10 messages per hour per IP
+    max: 20, // 20 messages per hour per IP
     standardHeaders: true,
     legacyHeaders: false,
     message: { success: false, error: 'Too many messages sent. Please try again later.' },
@@ -104,10 +104,10 @@ const contactLimiter = rateLimit({
 // ===== SECURITY: API Rate Limiter for authenticated routes =====
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 50,
+    max: 500, // Generous limit for admin saving/editing
     standardHeaders: true,
     legacyHeaders: false,
-    message: { success: false, error: 'API rate limit exceeded.' },
+    message: { success: false, error: 'API rate limit exceeded. Please wait a moment.' },
     keyGenerator: getClientIp,
     validate: false,
 });
@@ -223,7 +223,7 @@ if (!ADMIN_USERNAME || !ADMIN_PASSWORD_RAW) {
 
 // ===== SECURITY: Failed login tracker (account lockout) =====
 const failedLoginAttempts = new Map(); // IP -> { count, lastAttempt }
-const MAX_FAILED_ATTEMPTS = 5;
+const MAX_FAILED_ATTEMPTS = 10;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
 function isLockedOut(ip) {
@@ -407,6 +407,26 @@ app.post('/api/logout', authenticateToken, (req, res) => {
     res.json({ success: true, message: 'Logged out successfully.' });
 });
 
+// --- Verify Session / Token ---
+app.get('/api/auth/verify', authenticateToken, (req, res) => {
+    res.json({ success: true, user: req.user.sub });
+});
+
+// --- Helper: Read Local Data Backup ---
+function getLocalFallbackData() {
+    try {
+        const fs = require('fs');
+        const backupPath = path.join(__dirname, 'default_data.json');
+        if (fs.existsSync(backupPath)) {
+            const content = fs.readFileSync(backupPath, 'utf8');
+            return JSON.parse(content);
+        }
+    } catch (e) {
+        console.error('Error reading default_data.json:', e.message);
+    }
+    return {};
+}
+
 // --- Save Portfolio Data ---
 app.post('/api/save', apiLimiter, authenticateToken, async (req, res) => {
     try {
@@ -417,9 +437,9 @@ app.post('/api/save', apiLimiter, authenticateToken, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Invalid data format.' });
         }
 
-        // SECURITY: Check payload size (prevent excessively large saves)
+        // SECURITY: Check payload size (1MB max)
         const dataSize = JSON.stringify(newData).length;
-        if (dataSize > 500000) { // 500KB max
+        if (dataSize > 1000000) {
             return res.status(413).json({ success: false, error: 'Data too large.' });
         }
 
@@ -432,11 +452,27 @@ app.post('/api/save', apiLimiter, authenticateToken, async (req, res) => {
             }
         }
 
+        // 1. ALWAYS persist to default_data.json as local backup & guaranteed storage
+        const fs = require('fs');
+        const backupPath = path.join(__dirname, 'default_data.json');
+        try {
+            fs.writeFileSync(backupPath, JSON.stringify(filteredData, null, 2), 'utf8');
+            console.log('💾 Data persisted to default_data.json');
+        } catch (fsErr) {
+            console.error('Failed to write default_data.json:', fsErr.message);
+        }
+
+        // 2. If MongoDB Atlas is connected, ALSO update database
         if (mongoose.connection.readyState >= 1) {
-            await Portfolio.replaceOne({}, filteredData, { upsert: true });
+            try {
+                await Portfolio.replaceOne({}, filteredData, { upsert: true });
+                console.log('☁️ Data synced to MongoDB Atlas');
+            } catch (dbErr) {
+                console.error('MongoDB sync error:', dbErr.message);
+            }
         }
         
-        console.log(`💾 Portfolio data saved by ${req.user.sub}`);
+        console.log(`✅ Portfolio data saved successfully by ${req.user.sub}`);
         res.json({ success: true });
     } catch(err) {
         console.error('Save error:', err.message);
@@ -452,7 +488,9 @@ app.post('/api/reset', apiLimiter, authenticateToken, async (req, res) => {
         if (fs.existsSync(backupPath)) {
             const backupData = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
             if (mongoose.connection.readyState >= 1) {
-                await Portfolio.replaceOne({}, backupData, { upsert: true });
+                try {
+                    await Portfolio.replaceOne({}, backupData, { upsert: true });
+                } catch(e) {}
             }
 
             console.log(`🔄 Portfolio data reset by ${req.user.sub}`);
@@ -501,10 +539,30 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
             date: new Date()
         };
         
+        // 1. ALWAYS persist to messages.json
+        const fs = require('fs');
+        const messagesPath = path.join(__dirname, 'messages.json');
+        let currentMessages = [];
+        try {
+            if (fs.existsSync(messagesPath)) {
+                currentMessages = JSON.parse(fs.readFileSync(messagesPath, 'utf8'));
+            }
+        } catch(e) {}
+        currentMessages.unshift(newMsg);
+        try {
+            fs.writeFileSync(messagesPath, JSON.stringify(currentMessages, null, 2), 'utf8');
+        } catch(e) {}
+
+        // 2. If MongoDB is connected, also save to MongoDB
         if (mongoose.connection.readyState >= 1) {
-            await Message.create(newMsg);
+            try {
+                await Message.create(newMsg);
+            } catch (dbErr) {
+                console.error('MongoDB message create error:', dbErr.message);
+            }
         }
         
+        console.log(`📩 New message received from: ${cleanEmail}`);
         res.json({ success: true });
     } catch(err) {
         console.error('Contact form error:', err.message);
@@ -517,9 +575,22 @@ app.get('/api/messages', apiLimiter, authenticateToken, async (req, res) => {
     try {
         let messages = [];
         if (mongoose.connection.readyState >= 1) {
-            messages = await Message.find().sort({ date: -1 }).limit(100).lean();
+            try {
+                messages = await Message.find().sort({ date: -1 }).limit(100).lean();
+            } catch(e) {}
         }
-        res.json({ success: true, data: messages });
+        
+        // Fallback to local messages.json if DB has none or is offline
+        if (!messages || messages.length === 0) {
+            const fs = require('fs');
+            const messagesPath = path.join(__dirname, 'messages.json');
+            if (fs.existsSync(messagesPath)) {
+                try {
+                    messages = JSON.parse(fs.readFileSync(messagesPath, 'utf8'));
+                } catch(e) {}
+            }
+        }
+        res.json({ success: true, data: messages || [] });
     } catch(err) {
         console.error('Get messages error:', err.message);
         res.status(500).json({ success: false, error: 'Failed to load messages.' });
@@ -536,8 +607,22 @@ app.delete('/api/messages/:id', apiLimiter, authenticateToken, async (req, res) 
             return res.status(400).json({ success: false, error: 'Invalid message ID.' });
         }
 
+        // Delete from local messages.json
+        const fs = require('fs');
+        const messagesPath = path.join(__dirname, 'messages.json');
+        if (fs.existsSync(messagesPath)) {
+            try {
+                let msgs = JSON.parse(fs.readFileSync(messagesPath, 'utf8'));
+                msgs = msgs.filter(m => m.id !== id);
+                fs.writeFileSync(messagesPath, JSON.stringify(msgs, null, 2), 'utf8');
+            } catch(e) {}
+        }
+
+        // Delete from MongoDB if connected
         if (mongoose.connection.readyState >= 1) {
-            await Message.deleteOne({ id });
+            try {
+                await Message.deleteOne({ id });
+            } catch(e) {}
         }
         
         console.log(`🗑️ Message ${id} deleted by ${req.user.sub}`);
@@ -557,24 +642,26 @@ app.get('/api/portfolio', async (req, res) => {
             try {
                 portfolioData = await Portfolio.findOne().lean();
             } catch (dbErr) {
-                console.error('DB query failed, falling back:', dbErr.message);
+                console.error('DB query failed, falling back to local file:', dbErr.message);
             }
         }
         
-        if (!portfolioData) {
-            portfolioData = {};
+        // If MongoDB has no data or returned empty, read default_data.json
+        if (!portfolioData || !portfolioData.skills || portfolioData.skills.length === 0) {
+            portfolioData = getLocalFallbackData();
         }
         
         let cleanData = { ...portfolioData };
         delete cleanData._id;
         delete cleanData.__v;
 
-        // SECURITY: Cache portfolio data for 5 minutes (reduce DB load from scraping)
-        res.set('Cache-Control', 'public, max-age=300');
+        // Disable caching so edits in CMS appear immediately on portfolio.html
+        res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.json({ success: true, data: cleanData });
     } catch(err) {
         console.error('Error fetching portfolio data:', err);
-        res.status(500).json({ success: false, error: 'Failed to load data' });
+        const fallback = getLocalFallbackData();
+        res.json({ success: true, data: fallback });
     }
 });
 

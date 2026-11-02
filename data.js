@@ -251,7 +251,7 @@ async function getPortfolioData() {
             headers: { 'Cache-Control': 'no-cache' }
         });
         const json = await response.json();
-        if (json.success && json.data) {
+        if (json.success && json.data && Object.keys(json.data).length > 0 && Array.isArray(json.data.skills)) {
             portfolioDataCache = json.data;
             return portfolioDataCache;
         }
@@ -259,13 +259,23 @@ async function getPortfolioData() {
         console.error('Failed to fetch live portfolio data. Using default data fallback.', err);
     }
     
+    portfolioDataCache = defaultData;
     return defaultData;
+}
+
+function getActiveToken() {
+    return sessionStorage.getItem('cms_token') || localStorage.getItem('cms_token');
+}
+
+function clearActiveToken() {
+    sessionStorage.removeItem('cms_token');
+    localStorage.removeItem('cms_token');
 }
 
 function savePortfolioData(data) {
     portfolioDataCache = data;
-    const token = localStorage.getItem('cms_token');
-    fetch(`${API_BASE_URL}/api/save`, {
+    const token = getActiveToken();
+    return fetch(`${API_BASE_URL}/api/save`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -274,23 +284,28 @@ function savePortfolioData(data) {
         body: JSON.stringify(data)
     }).then(res => {
         if (res.status === 401 || res.status === 403) {
-            localStorage.removeItem('cms_token');
+            clearActiveToken();
             location.reload();
+            return { success: false, error: 'Unauthorized' };
         }
         return res.json();
     }).then(res => {
-        if (!res.success) console.error('Failed to save data dynamically.');
-    }).catch(err => console.error(err));
+        if (!res.success) console.error('Failed to save data dynamically:', res.error);
+        return res;
+    }).catch(err => {
+        console.error('Save network error:', err);
+        return { success: false, error: err.message };
+    });
 }
 
 function resetPortfolioData() {
-    const token = localStorage.getItem('cms_token');
+    const token = getActiveToken();
     fetch(`${API_BASE_URL}/api/reset`, {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token }
     }).then(res => {
         if (res.status === 401 || res.status === 403) {
-            localStorage.removeItem('cms_token');
+            clearActiveToken();
         }
         location.reload();
     });

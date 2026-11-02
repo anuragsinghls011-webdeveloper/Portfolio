@@ -683,6 +683,33 @@
             }
         }
 
+        /* ===== AUTHENTICATION DISPLAY CONTROL ===== */
+        body.not-authenticated #sidebar,
+        body.not-authenticated .main,
+        body.not-authenticated #sidebarOverlay {
+            display: none !important;
+        }
+
+        body.not-authenticated .login-overlay {
+            display: flex !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        body.authenticated .login-overlay {
+            display: none !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        body.authenticated #sidebar {
+            display: flex !important;
+        }
+
+        body.authenticated .main {
+            display: flex !important;
+        }
+
         /* ===== LOGIN OVERLAY ===== */
         .login-overlay {
             position: fixed;
@@ -695,20 +722,21 @@
             transition: opacity 0.3s ease;
         }
 
-        .login-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
         .login-card {
             background: var(--bg-secondary);
             border: 1px solid var(--border);
             padding: 40px;
             border-radius: var(--radius);
             width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            max-width: 420px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
             text-align: center;
+            animation: loginFadeIn 0.3s ease;
+        }
+
+        @keyframes loginFadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .login-card h2 {
@@ -723,25 +751,38 @@
     </style>
 </head>
 
-<body>
+<body class="not-authenticated">
 
     <!-- Login Overlay -->
     <div class="login-overlay" id="loginOverlay">
         <div class="login-card">
-            <h2>Admin Login</h2>
+            <div style="font-size: 2.2rem; margin-bottom: 10px;">🔐</div>
+            <h2 style="margin-bottom: 6px;">Admin Portal</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 24px;">Enter your credentials to manage your portfolio</p>
+            
             <div class="form-group">
                 <label class="form-label">Username</label>
-                <input type="text" id="loginUser" class="form-input" placeholder="Enter username">
+                <input type="text" id="loginUser" class="form-input" placeholder="Enter username" autocomplete="username">
             </div>
             <div class="form-group">
                 <label class="form-label">Password</label>
-                <input type="password" id="loginPass" class="form-input" placeholder="Enter password"
+                <input type="password" id="loginPass" class="form-input" placeholder="Enter password" autocomplete="current-password"
                     onkeydown="if(event.key === 'Enter') handleLogin()">
             </div>
-            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;"
-                onclick="handleLogin()">Login</button>
-            <div id="loginError" style="color: var(--danger); margin-top: 15px; display: none;">Invalid credentials
+            
+            <div style="display: flex; align-items: center; justify-content: space-between; margin: 16px 0 20px; font-size: 0.82rem; color: var(--text-secondary);">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="rememberMe" style="accent-color: var(--accent); cursor: pointer;">
+                    <span>Remember me on this device</span>
+                </label>
             </div>
+
+            <button class="btn btn-primary" id="loginBtn" style="width: 100%; justify-content: center; padding: 12px;"
+                onclick="handleLogin()">
+                <span>Sign In</span>
+            </button>
+            
+            <div id="loginError" style="color: var(--danger); background: var(--danger-bg); border: 1px solid rgba(239, 68, 68, 0.2); padding: 10px 14px; border-radius: var(--radius-sm); margin-top: 16px; font-size: 0.85rem; display: none;"></div>
         </div>
     </div>
 
@@ -1204,7 +1245,8 @@
                 document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
                 item.classList.add('active');
                 const target = item.dataset.target;
-                document.getElementById(target).classList.add('active');
+                const tabEl = document.getElementById(target);
+                if (tabEl) tabEl.classList.add('active');
                 document.getElementById('topbarTitle').textContent = tabTitles[target] || 'Dashboard';
 
                 if (target === 'skills-tab') currentTab = 'skills';
@@ -1213,12 +1255,20 @@
                 else if (target === 'services-tab') currentTab = 'services';
                 else currentTab = target.replace('-tab', '');
 
+                // Hide "+ Add New" button for tabs that don't support adding items
+                const addBtn = document.getElementById('addBtn');
+                if (addBtn) {
+                    const hasAdd = ['skills', 'exp', 'proj', 'services'].includes(currentTab);
+                    addBtn.style.display = hasAdd ? 'inline-flex' : 'none';
+                }
+
                 hideForm('skills'); hideForm('exp'); hideForm('proj'); hideForm('services');
             });
         });
 
         // ===== SHOW / HIDE FORMS =====
         function handleAdd() {
+            if (!['skills', 'exp', 'proj', 'services'].includes(currentTab)) return;
             clearForm(currentTab);
             const formTitle = currentTab === 'skills' ? 'Add Skill Category' :
                 currentTab === 'exp' ? 'Add Experience' :
@@ -1229,21 +1279,28 @@
         }
 
         function showForm(type) {
-            document.getElementById(`${type}-list-view`).style.display = 'none';
-            document.getElementById(`${type}-form-view`).classList.add('active');
+            const listEl = document.getElementById(`${type}-list-view`);
+            const formEl = document.getElementById(`${type}-form-view`);
+            if (listEl) listEl.style.display = 'none';
+            if (formEl) formEl.classList.add('active');
         }
 
         function hideForm(type) {
-            document.getElementById(`${type}-list-view`).style.display = 'block';
-            document.getElementById(`${type}-form-view`).classList.remove('active');
+            const listEl = document.getElementById(`${type}-list-view`);
+            const formEl = document.getElementById(`${type}-form-view`);
+            if (listEl) listEl.style.display = 'block';
+            if (formEl) formEl.classList.remove('active');
         }
 
         function clearForm(type) {
             const container = document.getElementById(`${type}-form-view`);
+            if (!container) return;
             container.querySelectorAll('input:not([type=hidden]), textarea').forEach(el => el.value = '');
-            container.querySelector('input[type=hidden]').value = '';
+            const idInput = container.querySelector('input[type=hidden]');
+            if (idInput) idInput.value = '';
             if (type === 'proj') {
-                document.getElementById('proj-category').value = 'fullstack';
+                const cat = document.getElementById('proj-category');
+                if (cat) cat.value = 'fullstack';
             }
         }
 
@@ -1259,14 +1316,29 @@
         // ===== UPDATE STATS =====
         async function updateStats() {
             portfolioData = await getPortfolioData();
-            document.getElementById('stat-skills').textContent = portfolioData.skills.length;
-            document.getElementById('stat-exp').textContent = portfolioData.experience.length;
-            document.getElementById('stat-proj').textContent = portfolioData.projects.length;
-            document.getElementById('skills-count').textContent = portfolioData.skills.length;
-            document.getElementById('exp-count').textContent = portfolioData.experience.length;
-            document.getElementById('proj-count').textContent = portfolioData.projects.length;
+            if (!portfolioData) portfolioData = (typeof defaultData !== 'undefined' ? defaultData : {});
+            if (!Array.isArray(portfolioData.skills)) portfolioData.skills = [];
+            if (!Array.isArray(portfolioData.experience)) portfolioData.experience = [];
+            if (!Array.isArray(portfolioData.projects)) portfolioData.projects = [];
+            if (!Array.isArray(portfolioData.services)) portfolioData.services = [];
+            if (!portfolioData.hero) portfolioData.hero = {};
+            if (!portfolioData.about) portfolioData.about = {};
+            if (!portfolioData.contact) portfolioData.contact = {};
+
+            const skillsEl = document.getElementById('stat-skills');
+            if (skillsEl) skillsEl.textContent = portfolioData.skills.length;
+            const expEl = document.getElementById('stat-exp');
+            if (expEl) expEl.textContent = portfolioData.experience.length;
+            const projEl = document.getElementById('stat-proj');
+            if (projEl) projEl.textContent = portfolioData.projects.length;
+            const scEl = document.getElementById('skills-count');
+            if (scEl) scEl.textContent = portfolioData.skills.length;
+            const ecEl = document.getElementById('exp-count');
+            if (ecEl) ecEl.textContent = portfolioData.experience.length;
+            const pcEl = document.getElementById('proj-count');
+            if (pcEl) pcEl.textContent = portfolioData.projects.length;
             const svcCount = document.getElementById('svc-count');
-            if (svcCount && portfolioData.services) svcCount.textContent = portfolioData.services.length;
+            if (svcCount) svcCount.textContent = portfolioData.services.length;
         }
 
         // ===== RENDER LISTS =====
@@ -1619,11 +1691,49 @@
             showToast(existing > -1 ? 'Project updated!' : 'Project added!');
         }
 
-        // ===== MESSAGES CRUD =====
+        // ===== AUTHENTICATION HELPERS =====
+        function getAuthToken() {
+            return sessionStorage.getItem('cms_token') || localStorage.getItem('cms_token');
+        }
+
+        function setAuthToken(token, remember = false) {
+            if (remember) {
+                localStorage.setItem('cms_token', token);
+                sessionStorage.removeItem('cms_token');
+            } else {
+                sessionStorage.setItem('cms_token', token);
+                localStorage.removeItem('cms_token');
+            }
+        }
+
+        function clearAuthToken() {
+            sessionStorage.removeItem('cms_token');
+            localStorage.removeItem('cms_token');
+        }
+
+        function showLoginScreen() {
+            document.body.classList.remove('authenticated');
+            document.body.classList.add('not-authenticated');
+            document.getElementById('loginPass').value = '';
+            const errDiv = document.getElementById('loginError');
+            if (errDiv) errDiv.style.display = 'none';
+            const loginBtn = document.getElementById('loginBtn');
+            if (loginBtn) {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<span>Sign In</span>';
+            }
+        }
+
+        function showDashboard() {
+            document.body.classList.remove('not-authenticated');
+            document.body.classList.add('authenticated');
+        }
+
         // ===== MESSAGES CRUD =====
         async function loadMessages() {
             try {
-                const token = localStorage.getItem('cms_token');
+                const token = getAuthToken();
+                if (!token) return handleLogout();
                 const res = await fetch('/api/messages', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
@@ -1659,7 +1769,8 @@
         async function deleteMessage(id) {
             if (!confirm('Delete this message forever?')) return;
             try {
-                const token = localStorage.getItem('cms_token');
+                const token = getAuthToken();
+                if (!token) return handleLogout();
                 const res = await fetch('/api/messages/' + id, {
                     method: 'DELETE',
                     headers: { 'Authorization': 'Bearer ' + token }
@@ -1690,45 +1801,95 @@
 
         // ===== AUTHENTICATION =====
         async function checkAuth() {
-            const token = localStorage.getItem('cms_token');
-            if (token) {
-                document.getElementById('loginOverlay').classList.add('hidden');
-                await renderAll();
-                loadMessages();
-            } else {
-                document.getElementById('loginOverlay').classList.remove('hidden');
+            // One-time cleanup of legacy tokens from previous unauthenticated version
+            if (!sessionStorage.getItem('cms_session_initialized')) {
+                localStorage.removeItem('cms_token');
+                sessionStorage.setItem('cms_session_initialized', 'true');
+            }
+
+            const token = getAuthToken();
+            if (!token) {
+                showLoginScreen();
+                return;
+            }
+
+            try {
+                // Verify token validity with backend
+                const res = await fetch('/api/auth/verify', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.success) {
+                        showDashboard();
+                        await renderAll();
+                        loadMessages();
+                        return;
+                    }
+                }
+
+                // If token rejected, expired or blacklisted
+                clearAuthToken();
+                showLoginScreen();
+            } catch (e) {
+                console.error('Session verify failed:', e);
+                clearAuthToken();
+                showLoginScreen();
             }
         }
 
         async function handleLogin() {
             const user = document.getElementById('loginUser').value.trim();
             const pass = document.getElementById('loginPass').value.trim();
-            if (!user || !pass) return;
+            const rememberMe = document.getElementById('rememberMe')?.checked || false;
+            const errDiv = document.getElementById('loginError');
+            const loginBtn = document.getElementById('loginBtn');
+
+            if (!user || !pass) {
+                errDiv.textContent = 'Please enter both username and password.';
+                errDiv.style.display = 'block';
+                return;
+            }
 
             try {
+                if (loginBtn) {
+                    loginBtn.disabled = true;
+                    loginBtn.innerHTML = '<span>Verifying...</span>';
+                }
+                errDiv.style.display = 'none';
+
                 const res = await fetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: user, password: pass })
                 });
+
                 const json = await res.json();
-                if (json.success) {
-                    localStorage.setItem('cms_token', json.token);
-                    document.getElementById('loginError').style.display = 'none';
-                    checkAuth();
+                if (res.ok && json.success && json.token) {
+                    setAuthToken(json.token, rememberMe);
+                    errDiv.style.display = 'none';
+                    showDashboard();
+                    await renderAll();
+                    loadMessages();
                 } else {
-                    document.getElementById('loginError').style.display = 'block';
+                    errDiv.textContent = json.error || 'Invalid credentials.';
+                    errDiv.style.display = 'block';
                 }
             } catch (e) {
-                document.getElementById('loginError').textContent = 'Server error';
-                document.getElementById('loginError').style.display = 'block';
+                errDiv.textContent = 'Server connection error. Please try again.';
+                errDiv.style.display = 'block';
+            } finally {
+                if (loginBtn) {
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<span>Sign In</span>';
+                }
             }
         }
 
         async function handleLogout() {
-            // SECURITY: Invalidate token on server before clearing local storage
+            const token = getAuthToken();
             try {
-                const token = localStorage.getItem('cms_token');
                 if (token) {
                     await fetch('/api/logout', {
                         method: 'POST',
@@ -1736,10 +1897,9 @@
                     });
                 }
             } catch(e) { /* ignore */ }
-            localStorage.removeItem('cms_token');
-            document.getElementById('loginUser').value = '';
-            document.getElementById('loginPass').value = '';
-            checkAuth();
+
+            clearAuthToken();
+            showLoginScreen();
         }
 
         // ===== INIT =====
