@@ -10,6 +10,14 @@ const mongoSanitize = require('express-mongo-sanitize');
 const cookieParser = require('cookie-parser');
 const crypto = require('crypto');
 const validator = require('validator');
+const dns = require('dns');
+
+// Configure public DNS servers to resolve MongoDB SRV records reliably on cloud hosts (Render/Vercel)
+try {
+    dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+} catch (dnsErr) {
+    // Keep system default if environment restricts custom DNS
+}
 
 const app = express();
 
@@ -22,22 +30,24 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'"], // needed for inline admin scripts
+            scriptSrcAttr: ["'unsafe-inline'"], // needed for onclick/onkeydown handlers in admin.html
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            imgSrc: ["'self'", "data:", "https:"],
+            imgSrc: ["'self'", "data:", "https:", "http:"],
             connectSrc: ["'self'"],
             objectSrc: ["'none'"],
             frameSrc: ["'none'"],
             baseUri: ["'self'"],
             formAction: ["'self'"],
+            upgradeInsecureRequests: null, // allow http://localhost during local testing
         },
     },
     crossOriginEmbedderPolicy: false, // needed for external fonts
-    hsts: {
+    hsts: process.env.NODE_ENV === 'production' ? {
         maxAge: 31536000, // 1 year
         includeSubDomains: true,
         preload: true
-    },
+    } : false,
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     xContentTypeOptions: true,     // X-Content-Type-Options: nosniff
     xFrameOptions: { action: 'deny' }, // Prevent clickjacking
@@ -117,11 +127,18 @@ app.disable('x-powered-by');
 
 // ===== SECURITY: CORS — No external origin access to API =====
 app.use('/api', (req, res, next) => {
-    // Only allow same-origin requests to the API
+    // Only allow same-origin requests to the API (reverse-proxy safe)
     const origin = req.headers.origin;
-    const host = req.headers.host;
-    if (origin && !origin.includes(host)) {
-        return res.status(403).json({ success: false, error: 'Cross-origin requests not allowed.' });
+    const host = (req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+    if (origin && host) {
+        try {
+            const originHost = new URL(origin).host;
+            if (originHost !== host) {
+                return res.status(403).json({ success: false, error: 'Cross-origin requests not allowed.' });
+            }
+        } catch {
+            return res.status(403).json({ success: false, error: 'Invalid origin.' });
+        }
     }
     // Prevent MIME type sniffing
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -132,14 +149,31 @@ app.use('/api', (req, res, next) => {
 const mongoURI = process.env.MONGO_URI;
 if (mongoURI) {
     mongoose.connect(mongoURI, {
-        serverSelectionTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 30000, // 30s timeout for cloud cold starts
+        connectTimeoutMS: 30000,
+        socketTimeoutMS: 45000,
         maxPoolSize: 10,
     })
       .then(() => console.log('✅ Connected to MongoDB Atlas'))
-      .catch(err => console.error('❌ MongoDB Connection Error:', err.message));
+      .catch(err => {
+          console.error('❌ MongoDB Connection Error:', err.message);
+          if (err.message.includes('ENOTFOUND') || err.message.includes('querySrv')) {
+              console.error('👉 Fix: Cluster DNS not found. Check if your MongoDB Atlas cluster is paused or cluster URL has a typo.');
+          } else if (err.message.includes('timed out') || err.message.includes('whitelist') || err.message.includes('ETIMEDOUT')) {
+              console.error('👉 Fix: IP not whitelisted. In MongoDB Atlas -> Network Access, add 0.0.0.0/0 (Allow Access from Anywhere).');
+          } else if (err.message.includes('bad auth') || err.message.includes('Authentication failed')) {
+              console.error('👉 Fix: Authentication failed. Verify your database username and password in MONGO_URI.');
+          }
+          console.warn('ℹ️ Running in Local Mode: Data is safely loaded from & saved to default_data.json.');
+      });
+
+    mongoose.connection.on('disconnected', () => {
+        console.warn('⚠️ MongoDB Disconnected. Operating with local fallback.');
+    });
 } else {
     console.error('❌ Error: MONGO_URI environment variable is missing.');
     console.error('👉 Please set MONGO_URI in your Render dashboard (Environment Variables).');
+    console.warn('ℹ️ Running in Local Mode: Data is safely loaded from & saved to default_data.json.');
 }
 
 // ===== MONGOOSE MODELS =====
@@ -206,7 +240,6 @@ if (!JWT_SECRET || JWT_SECRET.length < 32) {
 }
 
 // ===== SECURITY: Admin password hashing on startup =====
-let adminPasswordHash = null;
 const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || '').trim();
 const ADMIN_PASSWORD_RAW = (process.env.ADMIN_PASSWORD || '').trim();
 
@@ -215,11 +248,9 @@ if (!ADMIN_USERNAME || !ADMIN_PASSWORD_RAW) {
     process.exit(1);
 }
 
-// Hash the password at startup so we never compare plaintext
-(async () => {
-    adminPasswordHash = await bcrypt.hash(ADMIN_PASSWORD_RAW, 12);
-    console.log('🔐 Admin password hashed (bcrypt, 12 rounds)');
-})();
+// Hash synchronously at startup so it's immediately ready for the first login request
+const adminPasswordHash = bcrypt.hashSync(ADMIN_PASSWORD_RAW, 10);
+console.log('🔐 Admin password hashed (bcrypt, 10 rounds)');
 
 // ===== SECURITY: Failed login tracker (account lockout) =====
 const failedLoginAttempts = new Map(); // IP -> { count, lastAttempt }

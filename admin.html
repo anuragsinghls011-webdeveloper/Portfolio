@@ -1801,12 +1801,6 @@
 
         // ===== AUTHENTICATION =====
         async function checkAuth() {
-            // One-time cleanup of legacy tokens from previous unauthenticated version
-            if (!sessionStorage.getItem('cms_session_initialized')) {
-                localStorage.removeItem('cms_token');
-                sessionStorage.setItem('cms_session_initialized', 'true');
-            }
-
             const token = getAuthToken();
             if (!token) {
                 showLoginScreen();
@@ -1865,7 +1859,13 @@
                     body: JSON.stringify({ username: user, password: pass })
                 });
 
-                const json = await res.json();
+                let json = {};
+                try {
+                    json = await res.json();
+                } catch {
+                    json = { error: `Server returned status ${res.status}` };
+                }
+
                 if (res.ok && json.success && json.token) {
                     setAuthToken(json.token, rememberMe);
                     errDiv.style.display = 'none';
